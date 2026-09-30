@@ -1,44 +1,64 @@
-# Dependencies
+# ---- Angular / Node ----
 node_modules/
-vendor/
-.venv/
-__pycache__/
-
-# Build output
 dist/
-build/
-.next/
-out/
+.angular/
+coverage/
 *.tsbuildinfo
+npm-debug.log*
+pnpm-debug.log*
+yarn-error.log*
 
-# Environment & secrets
+# ---- .NET ----
+[Bb]in/
+[Oo]bj/
+publish/
+[Pp]ackages/
+TestResults/
+.vs/
+*.user
+*.suo
+*.userprefs
+*_i.c
+*_p.c
+*.nupkg
+*.snupkg
+msbuild.log
+msbuild.err
+msbuild.wrn
+
+# ---- Segredos ----
+# appsettings.json fica versionado (config nao-sensivel).
+# Segredos de dev: `dotnet user-secrets`, nunca em arquivo no repo.
+appsettings.*.Local.json
+secrets.json
 .env
 .env.*
 !.env.example
 *.pem
+*.pfx
 *.key
 
-# Dados de candidatos — NUNCA versionar (repo publico)
+# ---- Dados de candidatos: NUNCA versionar (repo publico) ----
 uploads/
 curriculos/
 storage/
+App_Data/
+*.mdf
+*.ldf
 *.sqlite
 *.sqlite3
 *.db
 *.csv
 *.xlsx
 
-# Logs
+# ---- Logs ----
 *.log
 logs/
-npm-debug.log*
-pnpm-debug.log*
-yarn-error.log*
 
-# Agent scratch
+# ---- Agent scratch ----
 .scratch/
 
-# Editor & OS
+# ---- Editor & OS ----
 .DS_Store
 Thumbs.db
 .idea/
