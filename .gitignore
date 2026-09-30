@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+vendor/
+.venv/
+__pycache__/
+
+# Build output
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Dados de candidatos — NUNCA versionar (repo publico)
+uploads/
+curriculos/
+storage/
+*.sqlite
+*.sqlite3
+*.db
+*.csv
+*.xlsx
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+pnpm-debug.log*
+yarn-error.log*
+
+# Agent scratch
+.scratch/
+
+# Editor & OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
