@@ -36,6 +36,13 @@ ao fim de cada fatia de trabalho, não reconstruído no final.
 3. **Sete tickets**, cada um uma fatia vertical verificável, com dependências
    declaradas.
 
+**Alternativa considerada:** o [spec-kit](https://github.com/github/spec-kit)
+do GitHub, que gera especificação, plano e lista de tarefas como arquivos
+versionados para cada funcionalidade. Esse formato compensa em projetos maiores
+ou com várias pessoas. Aqui o escopo cabe em sete tickets, e issues no GitHub
+cumprem o mesmo papel com menos cerimônia: cada uma já traz critério de aceite
+e dependências, e a revisão de cada fatia confere o código contra o ticket.
+
 Commits pequenos, em português, seguindo Conventional Commits. Nenhum entra com
 compilação quebrada ou teste vermelho.
 
