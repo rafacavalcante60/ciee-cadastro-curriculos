@@ -1,3 +1,8 @@
+mat-toolbar {
+  --mat-toolbar-container-background-color: var(--mat-sys-primary);
+  --mat-toolbar-container-text-color: var(--mat-sys-on-primary);
+}
+
 .titulo {
   color: inherit;
   text-decoration: none;
