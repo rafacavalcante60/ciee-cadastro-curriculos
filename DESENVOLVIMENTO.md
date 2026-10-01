@@ -125,7 +125,10 @@ resposta de saúde em tipo próprio, em vez de texto. São quatro valores num
 endpoint de diagnóstico; um enum com conversor de serialização seria mais
 maquinaria do que o problema pede.
 
-**Tempo dedicado.** <!-- a preencher -->
+**Tempo dedicado.** Aproximadamente 2 horas, cobrindo a sessão de
+questionamento do desenho, a especificação, o recorte em tickets e esta primeira
+fatia. Os horários dos commits não servem de medida: eles foram agrupados ao fim
+de cada bloco de trabalho.
 
 ## Limitações conhecidas
 
