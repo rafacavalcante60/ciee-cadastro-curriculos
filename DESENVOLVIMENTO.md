@@ -197,9 +197,9 @@ detalhes com seus testes, conferência do fluxo no navegador.
 - **"Não encontrado" separado de falha.** Só o 404 mostra "Candidato não
   encontrado". Servidor fora do ar mostra a mensagem genérica de falha, para
   não dizer que o candidato não existe quando o problema é outro.
-- **Resumo por inteiro com as quebras de linha.** O teste usa um resumo de
-  cerca de 1.700 caracteres e confere que volta igual. Na tela,
-  `white-space: pre-wrap` mantém os parágrafos digitados.
+- **Resumo por inteiro com as quebras de linha.** O teste HTTP usa um resumo
+  de cerca de 1.650 caracteres, em dois parágrafos, e confere que volta igual,
+  quebras incluídas. Na tela, `white-space: pre-wrap` mantém os parágrafos.
 - **Link no nome, não na linha inteira.** Uma linha clicável não é alcançável
   pelo teclado sem código extra; um link é.
 
@@ -207,19 +207,35 @@ detalhes com seus testes, conferência do fluxo no navegador.
 
 - O primeiro teste de detalhes usava um resumo de 2.240 caracteres e falhou no
   `POST`, porque a coluna tem 2.000. Reduzi o texto. O estouro virar 500 em vez
-  de 400 já está anotado para a #5.
+  de 400 continua na pendência de validação registrada na fatia anterior.
+
+**Achados da revisão:**
+
+- **Teste de componente contra a especificação.** Escrevi cinco testes da tela
+  de detalhes, mas a especificação (#1) exclui de propósito teste de componente
+  de listagem ou de detalhes: os seams do frontend são o formulário e o
+  `CandidatoService`. Removi o arquivo. O comportamento da tela fica coberto
+  pela conferência no navegador.
+- O registro dizia que o resumo voltava com as quebras de linha, mas nenhum
+  teste usava quebra. O resumo do teste HTTP passou a ter dois parágrafos.
+- Dois comentários repetiam o que o código já mostra (`pre-wrap` no SCSS e o
+  ProblemDetails do `NotFound()`, já declarado no `ProducesResponseType`).
+  Removidos.
+- **Rejeitado:** extrair o corpo do `POST` repetido entre dois testes de
+  integração. São dois usos, e o corpo por extenso deixa claro o que cada teste
+  grava.
+- **Rejeitado:** constante para o texto "Não informado", que aparece três vezes
+  num único template.
 
 **Como verifiquei:**
 
 - Dois testes de integração novos contra SQL Server real: detalhes devolvem os
-  dados gravados, e id inexistente devolve 404 em ProblemDetails. Os dois
-  falharam antes do endpoint existir.
-- Cinco testes da tela (campos completos, campo ausente como "Não informado",
-  404, id inválido, falha genérica) e um do `CandidatoService`.
-- Mutação: tratei todo erro como falha genérica e removi a guarda do id. Dois
-  testes da tela falharam; código restaurado.
-- No navegador: clique no nome na listagem abre os detalhes; `/candidatos/999999`
-  e `/candidatos/abc` mostram "Candidato não encontrado".
+  dados gravados, e id inexistente devolve 404 em ProblemDetails, com
+  `application/problem+json`. Os dois falharam antes do endpoint existir.
+- Um teste novo no `CandidatoService` para o `GET` por id.
+- No navegador: clique no nome na listagem abre os detalhes; campos ausentes
+  aparecem como "Não informado"; `/candidatos/999999` e `/candidatos/abc`
+  mostram "Candidato não encontrado".
 
 ## Limitações conhecidas
 
