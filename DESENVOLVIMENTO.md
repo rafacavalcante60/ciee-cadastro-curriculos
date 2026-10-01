@@ -196,6 +196,39 @@ segue normalmente.
   desfiz: o enunciado pede só nome, e-mail e telefone, e seria mais uma
   heurística frágil fora do pedido.
 
+## Fatia 7: aplicação completa no Docker Compose
+
+[#9](https://github.com/rafacavalcante60/ciee-cadastro-curriculos/issues/9).
+
+`docker compose up --build` sobe banco, migração, API e frontend sem .NET, Node
+nem `dotnet-ef` na máquina; `docker compose up -d banco` continua subindo só o
+SQL Server para o caminho com SDKs e para os testes.
+
+- **Migração num serviço próprio, e não no start da API.** Mantive a decisão da
+  fatia 1: criar o schema é um passo visível, que roda o `schema.sql` uma vez e
+  termina. A API só sobe se ele terminar com sucesso. O serviço reaproveita a
+  imagem do SQL Server, que já traz o `sqlcmd`, e serve também ao caminho
+  local: `docker compose run --rm migracao` substituiu a receita manual do
+  README.
+- **Script idempotente**, gerado com `dotnet ef migrations script --idempotent`
+  (regenerei e saiu idêntico ao versionado). Subir de novo sobre o mesmo volume
+  não falha.
+- **Nginx no lugar do proxy do dev server:** repassa `/api/` para a API, então o
+  frontend segue com caminhos relativos e sem CORS. O limite de corpo subiu
+  para 6 MB; com o padrão de 1 MB, um PDF válido de 2 MB levaria 413 do Nginx
+  sem chegar à API.
+- **curl na imagem da API** só para o healthcheck em `/api/saude`; a imagem
+  `aspnet` não traz nenhum cliente HTTP.
+- **Verificação:** num clone limpo com volume novo, os quatro fluxos no Chrome
+  headless e por `curl`, o upload de `samples/curriculo-completo.pdf`, um PDF
+  de 5,5 MB recusado pela API (e não pelo Nginx) e um de 7 MB recusado pelo
+  Nginx, e um segundo `up` sobre o volume existente.
+- A revisão apontou que a mensagem de banco ausente em `/api/saude` só citava o
+  `dotnet ef`; agora cita o serviço de migração. Rejeitei dois achados: o
+  healthcheck aceitar banco sem schema (a ordem do compose já garante o
+  schema) e o Nginx guardar o IP da API até reiniciar (só afeta recriar a API
+  sozinha, fora do fluxo pedido).
+
 ## Limitações conhecidas
 
 | Limitação | Efeito para quem usa |
