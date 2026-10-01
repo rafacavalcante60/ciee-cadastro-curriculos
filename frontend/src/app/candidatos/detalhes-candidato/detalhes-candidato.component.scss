@@ -22,3 +22,8 @@ dd {
 .falha {
   color: var(--mat-sys-error);
 }
+
+// Botão de texto tem padding lateral; sem compensar, o rótulo fica recuado em relação ao conteúdo.
+.voltar {
+  margin-inline-start: calc(-1 * var(--mat-text-button-horizontal-padding, 12px));
+}
