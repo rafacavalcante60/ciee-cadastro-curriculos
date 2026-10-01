@@ -5,8 +5,9 @@ cadastro acontece por dois caminhos que compartilham o mesmo formulário e as
 mesmas regras de validação: preenchimento manual, ou envio de um currículo em
 PDF do qual a aplicação tenta extrair nome, e-mail e telefone.
 
-> **Estado atual:** esqueleto do projeto. O cadastro, a listagem, a tela de
-> detalhes e a importação de PDF estão em desenvolvimento. A
+> **Estado atual:** cadastro manual e listagem de candidatos funcionando. A tela
+> de detalhes, as validações completas e a importação de PDF estão em
+> desenvolvimento. A
 > [especificação](https://github.com/rafacavalcante60/ciee-cadastro-curriculos/issues/1)
 > e os [tickets](https://github.com/rafacavalcante60/ciee-cadastro-curriculos/issues)
 > estão nas issues do repositório.
@@ -43,7 +44,6 @@ cp .env.example .env
 docker compose up -d
 
 # 3. Crie a estrutura do banco
-#    (ainda sem efeito: a primeira migration chega com a fatia de cadastro)
 cd backend
 export ConnectionStrings__CurriculosDb="Server=localhost,1433;Database=CieeCurriculos;User Id=sa;Password=SUA_SENHA;TrustServerCertificate=True"
 dotnet ef database update --project CieeCurriculos.Api
@@ -51,6 +51,19 @@ dotnet ef database update --project CieeCurriculos.Api
 # 4. Rode a API e, em outro terminal, o frontend
 dotnet run --project CieeCurriculos.Api     # http://localhost:5080
 cd ../frontend && npm install && npm start  # http://localhost:4200
+```
+
+Sem a ferramenta `dotnet-ef`, o passo 3 pode ser feito com o `backend/schema.sql`,
+exportado da migration. O script é idempotente e é aplicado com o `sqlcmd` que
+já vem na imagem do SQL Server (rode da raiz do repositório, com a senha do
+`.env` exportada em `MSSQL_SA_PASSWORD`):
+
+```bash
+docker compose cp backend/schema.sql banco:/tmp/schema.sql
+docker compose exec banco /opt/mssql-tools18/bin/sqlcmd -C -b -U sa -P "$MSSQL_SA_PASSWORD" \
+  -Q "IF DB_ID('CieeCurriculos') IS NULL CREATE DATABASE CieeCurriculos"
+docker compose exec banco /opt/mssql-tools18/bin/sqlcmd -C -b -U sa -P "$MSSQL_SA_PASSWORD" \
+  -d CieeCurriculos -i /tmp/schema.sql
 ```
 
 A API fica em `http://localhost:5080`, com Swagger em `/swagger`. O frontend
@@ -66,8 +79,7 @@ curl http://localhost:5080/api/saude
 
 A resposta distingue três situações: a API no ar, o servidor de banco
 alcançável, e o banco da aplicação já criado. Se o banco aparecer como
-`ausente`, falta o passo 3 — e, enquanto o esqueleto não tiver a primeira
-migration, `ausente` é a resposta esperada.
+`ausente`, falta o passo 3.
 
 ### Configurando a connection string
 

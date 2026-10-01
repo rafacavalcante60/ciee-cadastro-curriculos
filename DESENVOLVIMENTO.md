@@ -97,6 +97,83 @@ compose e README.
 ausente, servidor fora do ar) e chamadas manuais a `/api/saude` e ao Swagger
 com o container do compose.
 
+## Fatia 2: cadastro manual e listagem
+
+Ticket: [#3](https://github.com/rafacavalcante60/ciee-cadastro-curriculos/issues/3).
+
+Primeira fatia que passa por todas as camadas: entidade `Candidato`, migration
+inicial com índice único em `Email`, `schema.sql` exportado, `POST` e
+`GET /api/candidatos`, formulário e listagem no Angular, e testes nos dois
+lados.
+
+**Onde a IA ajudou:** implementação em TDD a partir dos critérios do ticket,
+testes no seam HTTP e no `CandidatoService`, conferência do fluxo no navegador
+com o Chrome do puppeteer, README.
+
+**Decisões desta fatia:**
+
+- **Relógio injetável (`TimeProvider`).** O teste de ordenação grava três
+  candidatos fora da ordem cronológica, com o mais recente recebendo o menor
+  `Id`. Só passa se a listagem ordenar pela data. Com o relógio do sistema, os
+  cadastros sairiam em ordem crescente e uma ordenação por `Id` passaria igual.
+- **`DataCadastro` marcada como UTC na leitura.** `datetime2` não guarda fuso.
+  Sem o conversor, a API devolvia a data sem o `Z` e o navegador a mostraria
+  três horas adiantada.
+- **Banco limpo a cada teste.** Os testes compartilham um único container, e a
+  listagem devolve tudo o que há na tabela. Apagar os candidatos antes de cada
+  teste faz o resultado não depender da ordem de execução.
+- **Telas carregadas sob demanda.** Com o Material, o pacote inicial passou do
+  limite de aviso do Angular (536 kB contra 500 kB). Em vez de aumentar o
+  limite, as rotas passaram a usar `loadComponent`, e o pacote inicial caiu
+  para 327 kB.
+- **`schema.sql` idempotente desde já**, gerado com `--idempotent`, para que o
+  serviço de migração do compose (#9) possa reaplicá-lo sobre um volume
+  existente.
+
+**O que corrigi ou adaptei:**
+
+- **Build quebrado vindo da fatia anterior.** O `provideAnimationsAsync()`
+  registrado na revisão do esqueleto carrega `@angular/animations`, que não
+  estava instalado. O `ng build` falhava, e nenhum teste pegava, porque nenhum
+  componente do Material era renderizado ainda. Corrigido num commit próprio.
+- **Comando do README que não funcionava.** A primeira versão do caminho sem
+  `dotnet-ef` passava o `schema.sql` ao `sqlcmd` pela entrada padrão. Falhou
+  ao testar, porque o `dotnet ef` grava o arquivo com BOM. O README agora copia
+  o arquivo para o container e usa `-i`.
+- **Teste do scaffold removido.** O `app.component.spec.ts` verificava o texto
+  de boas-vindas do Angular, que saiu. O componente raiz não é um dos seams
+  acordados, então não ganhou teste novo.
+
+**Achados da revisão:**
+
+- Normalização do e-mail estava solta no controller. Foi para
+  `NovoCandidato.ParaCandidato`, onde a checagem de duplicidade da #5 também
+  vai precisar dela.
+- Leitura da listagem repetida nos testes: extraída para `ListarAsync()`.
+- `opcional()` no formulário não dizia o que fazia: virou `nuloSeEmBranco()`.
+- **Rejeitado:** um tipo comum para os campos repetidos em entidade, entrada e
+  resposta. São três papéis distintos, e uma base compartilhada seria a camada
+  extra que a especificação descarta.
+- **Rejeitado:** um tipo `Email` próprio. Concentrar a normalização num lugar
+  resolve o problema sem um tipo a mais para explicar.
+- **Fica para a #5:** telefone ainda é gravado como digitado, sem normalizar
+  para dígitos, e texto acima do tamanho da coluna estoura como 500 em vez de
+  400. As duas coisas são validação, que este ticket deixou de fora.
+
+**Como verifiquei:**
+
+- Cinco testes de integração contra SQL Server real: o cadastro aparece na
+  listagem, a ordenação é pela data, a lista vazia volta vazia, a data enviada
+  pelo cliente é ignorada, e o e-mail é normalizado.
+- Quatro testes do formulário e dois do `CandidatoService`.
+- Para conferir que os testes detectam erro, alterei o código de propósito: troquei a ordenação por
+  `Id`, removi a normalização e removi a guarda de envio duplicado. Os testes
+  correspondentes falharam e depois restaurei o código.
+- No navegador: lista vazia com mensagem, cadastro com duplo clique gerando um
+  único `POST`, e-mail digitado como `  Maria.Silva@Exemplo.COM ` gravado em
+  minúsculas, e hora exibida no fuso local.
+- `schema.sql` aplicado duas vezes seguidas no mesmo banco, sem erro.
+
 ## Limitações conhecidas
 
 <!-- Consolidado na fatia de documentação, após a importação de PDF estar pronta. -->
