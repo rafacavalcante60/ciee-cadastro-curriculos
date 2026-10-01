@@ -238,6 +238,110 @@ detalhes com seus testes, conferência do fluxo no navegador.
   aparecem como "Não informado"; `/candidatos/999999` e `/candidatos/abc`
   mostram "Candidato não encontrado".
 
+## Fatia 4: validações e mensagens de erro
+
+Ticket: [#5](https://github.com/rafacavalcante60/ciee-cadastro-curriculos/issues/5).
+
+Regras de nome, e-mail, telefone e tamanho dos campos na API e no formulário,
+com mensagens em português junto a cada campo. E-mail repetido devolve 409 e
+aparece no campo de e-mail. O cadastro bem-sucedido mostra um aviso, e a API
+fora do ar gera uma mensagem própria.
+
+**Onde a IA ajudou:** testes no seam HTTP, no formulário e no
+`CandidatoService` escritos antes do código, um ciclo por regra; conferência
+do formulário no navegador; revisão da fatia.
+
+**Decisões desta fatia:**
+
+- **Atributos de validação (DataAnnotations).** São nativos, o
+  `[ApiController]` já os converte em `ValidationProblemDetails`, e cada regra
+  fica visível na própria propriedade de `NovoCandidato`. FluentValidation
+  seria mais uma biblioteca para explicar, sem ganho num formulário de cinco
+  campos.
+- **Erros com o nome do campo no JSON.** A API devolvia os erros com a chave
+  `NomeCompleto`, enquanto o frontend envia `nomeCompleto`. O
+  `SystemTextJsonValidationMetadataProvider` passa a usar o nome do JSON, e o
+  formulário associa cada erro ao seu campo sem tradução de nomes. O provedor
+  não funciona com parâmetros de construtor de record, por isso `NovoCandidato`
+  passou a ter propriedades `init`.
+- **Mesma regra nos dois lados, ao pé da letra.** A expressão do e-mail e a
+  normalização do telefone são as mesmas em C# e em TypeScript. Assim não há
+  um e-mail que o formulário aceita e a API recusa. Campo em branco gera só
+  "Informe…", e não também a mensagem de formato, que é o comportamento dos
+  validadores do Angular.
+- **Telefone gravado só com dígitos.** A normalização remove espaços,
+  parênteses, hífen e ponto. Qualquer outro caractere, inclusive o `+` do
+  `+55`, sobra e reprova. A extração do PDF (#6) remove o `+55` antes de
+  preencher o formulário.
+- **E-mail único em dois níveis.** A checagem antes do insert cobre o caso
+  comum. A violação do índice único (erros 2601 e 2627 do SQL Server) é
+  capturada e também vira 409, para a corrida entre dois cadastros simultâneos.
+- **409 como ProblemDetails comum, não como erro de validação.** O
+  `CandidatoService` traduz o 409 em erro no campo de e-mail. O contrato da API
+  continua padrão, e a tradução fica num lugar só, coberto por teste.
+- **"Servidor indisponível" para falha de rede e 5xx.** Com a API fora do ar, o
+  proxy do `ng serve` responde 500 com corpo vazio (conferido na prática), e o
+  Nginx responde 502. Pelo status não dá para separar API caída de erro
+  interno, então os dois mostram a mesma mensagem, escrita para não afirmar
+  que a API está fora.
+- **Tamanho máximo validado.** Texto acima do tamanho da coluna devolve 400 em
+  vez de 500, resolvendo a pendência da fatia 2.
+
+**O que corrigi ou adaptei:**
+
+- O título do `ValidationProblemDetails` continuava em inglês ("One or more
+  validation errors occurred."). Percebi ao chamar a API à mão; os testes só
+  conferiam as mensagens dos campos. O teste passou a conferir o título, e a
+  tradução foi feita por `AddProblemDetails`.
+- O primeiro teste dos dois cenários de sucesso usava `whenStable`, que nunca
+  terminava: o aviso de sucesso fica aberto cinco segundos e esse timer
+  impedia a estabilização. Os dois passaram a usar `fakeAsync`.
+
+**Achados da revisão:**
+
+- Nome com espaços nas pontas (`" M "`) passava pelo mínimo de 2 caracteres,
+  dos dois lados. O mínimo passou a ignorar os espaços, e o nome é gravado
+  aparado, como o e-mail.
+- A mensagem de reserva do 409 no frontend era diferente da mensagem da API.
+  Igualada.
+- A mensagem de servidor indisponível mandava verificar se a API estava em
+  execução, o que engana quando o 500 vem de um erro da própria API.
+  Reescrita.
+- `TelefoneAttribute` virou `FormatoDeTelefoneAttribute`, no padrão dos outros
+  atributos, e o tipo do estado de falha do formulário passou a ser derivado de
+  `FalhaAoCadastrar`.
+- **Rejeitado:** traduzir as mensagens de erro de desserialização (JSON
+  malformado, corpo vazio). O formulário nunca envia esses casos, e
+  traduzi-las exigiria substituir o tratamento do framework.
+- **Rejeitado:** um mapa de mensagens por campo no formulário, no lugar da
+  cascata de `if`. São cinco campos fixos, e as mensagens ficam lidas num
+  lugar só.
+- **Rejeitado:** extrair o corpo de `IsValid` repetido em dois atributos e a
+  mensagem "Use no máximo…" repetida em quatro. É repetição curta e visível, e
+  um nível de indireção a mais custaria mais para ler.
+- **Rejeitado:** aplicar o tamanho máximo do e-mail depois de aparar os
+  espaços. Só afeta um e-mail de quase 256 caracteres com espaços nas pontas.
+
+**Como verifiquei:**
+
+- Testes de integração contra SQL Server real, um por regra: nome, e-mail e
+  telefone ausentes ou inválidos, telefone aceito com e sem máscara e gravado
+  só com dígitos, opcionais vazios aceitos, texto acima do tamanho, e-mail
+  repetido, inclusive com maiúsculas e espaços, e dez cadastros simultâneos com
+  o mesmo e-mail resultando em um 201 e nove 409.
+- Para confirmar que o teste de cadastros simultâneos passa mesmo pela captura
+  do índice, troquei temporariamente a resposta da captura por 418. Nas três
+  execuções, os nove cadastros recusados vieram por ela, e não pela checagem
+  prévia. Restaurei o código.
+- Testes do formulário para cada regra e para os erros vindos da API, e do
+  `CandidatoService` para a tradução de 400, 409, falha de rede e 500.
+- No navegador: formulário vazio e com dados inválidos mostrando a mensagem
+  sob cada campo; e-mail repetido digitado como `  Maria.Silva@Exemplo.COM `
+  mostrando o 409 no campo de e-mail, sem alerta genérico, e a mensagem
+  sumindo ao editar o campo; cadastro aceito com aviso na listagem e telefone
+  `(11) 98765-4321` gravado como `11987654321`; API desligada mostrando a
+  mensagem de servidor indisponível.
+
 ## Limitações conhecidas
 
 <!-- Consolidado na fatia de documentação, após a importação de PDF estar pronta. -->
