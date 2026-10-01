@@ -25,6 +25,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="..\..\samples\*.pdf;..\..\samples\esperado.json" LinkBase="samples" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\CieeCurriculos.Api\CieeCurriculos.Api.csproj" />
   </ItemGroup>
 
