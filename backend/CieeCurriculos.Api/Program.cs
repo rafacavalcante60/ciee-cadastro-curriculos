@@ -5,6 +5,7 @@ using Microsoft.OpenApi.Models;
 var construtor = WebApplication.CreateBuilder(args);
 
 construtor.Services.AddControllers();
+construtor.Services.AddSingleton(TimeProvider.System);
 construtor.Services.AddEndpointsApiExplorer();
 construtor.Services.AddSwaggerGen(opcoes =>
 {
