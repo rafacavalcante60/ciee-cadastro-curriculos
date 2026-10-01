@@ -146,7 +146,6 @@ sudo apt-get install -y libnss3 libasound2t64
 ```
 backend/    API em ASP.NET Core, projeto de testes e schema.sql
 frontend/   Aplicação Angular e configuração do Nginx
-GLOSSARY.md Vocabulário do domínio
 ```
 
 ## Fora de escopo

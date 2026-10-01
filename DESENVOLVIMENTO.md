@@ -33,6 +33,9 @@ A #9, subir tudo com `docker compose`, entrou depois do esqueleto, para a
 avaliadora não precisar instalar .NET, Node, `dotnet-ef` nem as bibliotecas do
 Chrome. Considerei o [spec-kit](https://github.com/github/spec-kit), mas para
 oito tickets as issues do GitHub fazem o mesmo papel com menos cerimônia.
+Também escrevi um glossário do domínio e depois o apaguei: com uma entidade
+só, os termos se explicam, e as decisões que ele guardava já estão no README
+e neste registro.
 
 Commits pequenos, em português, no padrão Conventional Commits, nenhum com
 build quebrado ou teste vermelho.
