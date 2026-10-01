@@ -54,6 +54,34 @@ public class ExtracaoDeCurriculoTestes : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Pdf_sem_camada_de_texto_devolve_200_com_campos_nulos_e_aviso()
+    {
+        var resposta = await EnviarAsync("curriculo-digitalizado.pdf", Amostra("curriculo-digitalizado.pdf"));
+
+        Assert.Equal(HttpStatusCode.OK, resposta.StatusCode);
+        var campos = await resposta.Content.ReadFromJsonAsync<CamposExtraidos>();
+        Assert.Equal(CamposExtraidos.SemResultado(
+            "O PDF não tem texto selecionável, como acontece com currículos digitalizados. Preencha os campos à mão."), campos);
+    }
+
+    [Fact]
+    public async Task Cadastro_manual_conclui_depois_de_uma_extracao_sem_resultado()
+    {
+        var extracao = await EnviarAsync("curriculo-corrompido.pdf", Amostra("curriculo-corrompido.pdf"));
+        var campos = await extracao.Content.ReadFromJsonAsync<CamposExtraidos>();
+        Assert.Equal(HttpStatusCode.OK, extracao.StatusCode);
+        Assert.NotNull(campos!.Aviso);
+
+        var cadastro = await _cliente.PostAsJsonAsync("/api/candidatos", new NovoCandidato
+        {
+            NomeCompleto = campos.NomeCompleto ?? "Maria Aparecida da Silva",
+            Email = campos.Email ?? "maria.silva@exemplo.com",
+            Telefone = campos.Telefone ?? "11987654321"
+        });
+        Assert.Equal(HttpStatusCode.Created, cadastro.StatusCode);
+    }
+
+    [Fact]
     public async Task Arquivo_com_extensao_pdf_que_nao_e_pdf_devolve_400()
     {
         var resposta = await EnviarAsync(ArquivoQueNaoEPdf, Amostra(ArquivoQueNaoEPdf));

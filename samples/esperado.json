@@ -18,5 +18,23 @@
     "nomeCompleto": "Ana Beatriz de Oliveira",
     "email": "ana.oliveira@exemplo.com",
     "telefone": "3133334444"
+  },
+  "curriculo-digitalizado.pdf": {
+    "nomeCompleto": null,
+    "email": null,
+    "telefone": null,
+    "aviso": "O PDF não tem texto selecionável, como acontece com currículos digitalizados. Preencha os campos à mão."
+  },
+  "curriculo-protegido-por-senha.pdf": {
+    "nomeCompleto": null,
+    "email": null,
+    "telefone": null,
+    "aviso": "O PDF é protegido por senha e não pôde ser lido. Preencha os campos à mão."
+  },
+  "curriculo-corrompido.pdf": {
+    "nomeCompleto": null,
+    "email": null,
+    "telefone": null,
+    "aviso": "Não foi possível ler o PDF, que pode estar corrompido. Preencha os campos à mão."
   }
 }

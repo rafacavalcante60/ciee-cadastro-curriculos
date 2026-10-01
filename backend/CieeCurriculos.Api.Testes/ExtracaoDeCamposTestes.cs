@@ -22,12 +22,23 @@ public class ExtracaoDeCamposTestes
     [InlineData("maria.silva@exemplo.com\n(11) 98765-4321", null, "maria.silva@exemplo.com", "11987654321")]
     [InlineData("maria.silva@exemplo.com", null, "maria.silva@exemplo.com", null)]
     [InlineData("experiência em atendimento ao cliente", null, null, null)]
-    [InlineData("", null, null, null)]
     public void Campo_nao_identificado_volta_nulo(string texto, string? nome, string? email, string? telefone)
     {
         var campos = ExtracaoDeCampos.Extrair(texto);
 
         Assert.Equal(new CamposExtraidos(nome, email, telefone), campos);
+    }
+
+    // É o que sai de um PDF digitalizado: a página é uma imagem.
+    [Theory]
+    [InlineData("")]
+    [InlineData(" \n\n  \n")]
+    public void Texto_vazio_produz_todos_os_campos_nulos_e_um_aviso(string texto)
+    {
+        var campos = ExtracaoDeCampos.Extrair(texto);
+
+        Assert.Equal(new CamposExtraidos(null, null, null,
+            "O PDF não tem texto selecionável, como acontece com currículos digitalizados. Preencha os campos à mão."), campos);
     }
 
     [Fact]

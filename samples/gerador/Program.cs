@@ -8,22 +8,7 @@ QuestPDF.Settings.License = LicenseType.Community;
 
 var destino = args.Length > 0 ? args[0] : "..";
 
-Gerar("curriculo-completo.pdf", pagina => pagina.Content().Column(coluna =>
-{
-    coluna.Spacing(6);
-    coluna.Item().Text("Maria Aparecida da Silva").FontSize(22).Bold();
-    coluna.Item().Text("Desenvolvedora de Software Júnior").FontSize(13);
-    coluna.Item().Text("maria.silva@exemplo.com  ·  (11) 98765-4321  ·  São Paulo, SP");
-    Secao(coluna, "Resumo profissional",
-        "Estudante de Análise e Desenvolvimento de Sistemas, com experiência em C#, .NET e Angular. " +
-        "Interesse em desenvolvimento web e em boas práticas de teste.");
-    Secao(coluna, "Experiência",
-        "Estagiária de desenvolvimento, Empresa Fictícia Ltda. (2024 – 2025)",
-        "Manutenção de APIs em ASP.NET Core e telas em Angular.");
-    Secao(coluna, "Formação",
-        "Tecnologia em Análise e Desenvolvimento de Sistemas, Faculdade Exemplo (2023 – 2026)");
-    Secao(coluna, "Habilidades", "C#, .NET, SQL Server, Angular, TypeScript, Git");
-}));
+Gerar("curriculo-completo.pdf", CurriculoCompleto);
 
 Gerar("curriculo-sem-telefone.pdf", pagina => pagina.Content().Column(coluna =>
 {
@@ -76,12 +61,36 @@ Gerar("curriculo-duas-colunas.pdf", pagina => pagina.Content().Row(linha =>
     });
 }));
 
+// Página do currículo completo transformada em imagem, como sai de um scanner:
+// o PDF não tem camada de texto.
+var paginaDigitalizada = Curriculo(CurriculoCompleto)
+    .GenerateImages(new ImageGenerationSettings { RasterDpi = 150 })
+    .Single();
+Gerar("curriculo-digitalizado.pdf", pagina =>
+{
+    pagina.Margin(0);
+    pagina.Content().Image(paginaDigitalizada).FitArea();
+});
+
+// A criptografia sorteia o sal a cada geração: só este arquivo muda de bytes.
+DocumentOperation
+    .LoadFile(Path.Combine(destino, "curriculo-completo.pdf"))
+    .Encrypt(new DocumentOperation.Encryption256Bit { UserPassword = "senha-do-candidato", OwnerPassword = "senha-do-dono" })
+    .Save(Path.Combine(destino, "curriculo-protegido-por-senha.pdf"));
+
+// Começa com a assinatura de PDF, e por isso passa pela checagem de tipo, mas o
+// resto é o início de um PDF de verdade cortado no meio.
+var completo = File.ReadAllBytes(Path.Combine(destino, "curriculo-completo.pdf"));
+File.WriteAllBytes(Path.Combine(destino, "curriculo-corrompido.pdf"), completo[..(completo.Length / 3)]);
+
 // Texto puro com extensão .pdf: a checagem da API olha os bytes, não o nome.
 File.WriteAllText(Path.Combine(destino, "nao-e-pdf.pdf"),
     "Este arquivo é texto puro com extensão .pdf, para testar a checagem de assinatura de bytes.\n");
 
-void Gerar(string arquivo, Action<PageDescriptor> conteudo)
-{
+void Gerar(string arquivo, Action<PageDescriptor> conteudo) =>
+    Curriculo(conteudo).GeneratePdf(Path.Combine(destino, arquivo));
+
+static IDocument Curriculo(Action<PageDescriptor> conteudo) =>
     Document.Create(documento => documento.Page(pagina =>
     {
         pagina.Size(PageSizes.A4);
@@ -89,9 +98,24 @@ void Gerar(string arquivo, Action<PageDescriptor> conteudo)
         pagina.DefaultTextStyle(estilo => estilo.FontSize(11));
         conteudo(pagina);
     }))
-    .WithMetadata(new DocumentMetadata { CreationDate = DateTimeOffset.UnixEpoch, ModifiedDate = DateTimeOffset.UnixEpoch })
-    .GeneratePdf(Path.Combine(destino, arquivo));
-}
+    .WithMetadata(new DocumentMetadata { CreationDate = DateTimeOffset.UnixEpoch, ModifiedDate = DateTimeOffset.UnixEpoch });
+
+static void CurriculoCompleto(PageDescriptor pagina) => pagina.Content().Column(coluna =>
+{
+    coluna.Spacing(6);
+    coluna.Item().Text("Maria Aparecida da Silva").FontSize(22).Bold();
+    coluna.Item().Text("Desenvolvedora de Software Júnior").FontSize(13);
+    coluna.Item().Text("maria.silva@exemplo.com  ·  (11) 98765-4321  ·  São Paulo, SP");
+    Secao(coluna, "Resumo profissional",
+        "Estudante de Análise e Desenvolvimento de Sistemas, com experiência em C#, .NET e Angular. " +
+        "Interesse em desenvolvimento web e em boas práticas de teste.");
+    Secao(coluna, "Experiência",
+        "Estagiária de desenvolvimento, Empresa Fictícia Ltda. (2024 – 2025)",
+        "Manutenção de APIs em ASP.NET Core e telas em Angular.");
+    Secao(coluna, "Formação",
+        "Tecnologia em Análise e Desenvolvimento de Sistemas, Faculdade Exemplo (2023 – 2026)");
+    Secao(coluna, "Habilidades", "C#, .NET, SQL Server, Angular, TypeScript, Git");
+});
 
 static void Secao(ColumnDescriptor coluna, string titulo, params string[] paragrafos)
 {

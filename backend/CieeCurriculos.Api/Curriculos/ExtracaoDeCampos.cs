@@ -31,6 +31,12 @@ public static class ExtracaoDeCampos
 
     public static CamposExtraidos Extrair(string texto)
     {
+        if (string.IsNullOrWhiteSpace(texto))
+        {
+            return CamposExtraidos.SemResultado(
+                "O PDF não tem texto selecionável, como acontece com currículos digitalizados. Preencha os campos à mão.");
+        }
+
         var linhas = texto.Split('\n')
             .Select(linha => string.Join(' ', linha.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)))
             .ToList();

@@ -14,6 +14,13 @@ public class CurriculosController : ControllerBase
     // qualquer arquivo pode declará-los.
     private static readonly byte[] AssinaturaDePdf = "%PDF-"u8.ToArray();
 
+    private readonly ILogger<CurriculosController> _logger;
+
+    public CurriculosController(ILogger<CurriculosController> logger)
+    {
+        _logger = logger;
+    }
+
     // Não cria candidato: devolve um palpite para preencher o formulário.
     //
     // Por padrão o ASP.NET grava em arquivo temporário todo upload acima de 64 KB;
@@ -42,7 +49,7 @@ public class CurriculosController : ControllerBase
             return ArquivoInvalido("O arquivo enviado não é um PDF.");
         }
 
-        return Ok(ExtracaoDeCampos.Extrair(LeitorDePdf.ExtrairTexto(pdf)));
+        return Ok(ExtracaoDeCurriculo.Extrair(pdf, _logger));
     }
 
     private ObjectResult ArquivoInvalido(string detalhe) => Problem(
