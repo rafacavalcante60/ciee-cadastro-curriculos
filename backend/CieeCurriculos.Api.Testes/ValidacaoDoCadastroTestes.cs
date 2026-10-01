@@ -155,6 +155,38 @@ public class ValidacaoDoCadastroTestes : IAsyncLifetime
         Assert.Equal(new[] { "Use no máximo 256 caracteres." }, erros["email"]);
     }
 
+    [Theory]
+    [InlineData("maria@exemplo.com")]
+    [InlineData("  Maria@Exemplo.COM ")]
+    public async Task Email_ja_cadastrado_devolve_409_com_mensagem_especifica(string emailRepetido)
+    {
+        var primeiro = await _cliente.PostAsJsonAsync("/api/candidatos", new { nomeCompleto = "Maria da Silva", email = "maria@exemplo.com" });
+        Assert.Equal(HttpStatusCode.Created, primeiro.StatusCode);
+
+        var resposta = await _cliente.PostAsJsonAsync("/api/candidatos", new { nomeCompleto = "Maria Souza", email = emailRepetido });
+
+        Assert.Equal(HttpStatusCode.Conflict, resposta.StatusCode);
+        Assert.Equal("application/problem+json", resposta.Content.Headers.ContentType?.MediaType);
+        var problema = await resposta.Content.ReadFromJsonAsync<ProblemDetails>();
+        Assert.Equal(409, problema!.Status);
+        Assert.Equal("Já existe um candidato cadastrado com este e-mail.", problema.Detail);
+    }
+
+    [Fact]
+    public async Task Cadastros_simultaneos_com_o_mesmo_email_gravam_um_e_recusam_os_demais_com_409()
+    {
+        // Disparados juntos, vários passam pela checagem antes de qualquer um gravar;
+        // quem barra os demais é o índice único do banco.
+        var envios = Enumerable.Range(1, 10).Select(_ =>
+            _cliente.PostAsJsonAsync("/api/candidatos", new { nomeCompleto = "Maria da Silva", email = "maria@exemplo.com" }));
+
+        var respostas = await Task.WhenAll(envios);
+
+        Assert.Single(respostas, r => r.StatusCode == HttpStatusCode.Created);
+        Assert.All(respostas.Where(r => r.StatusCode != HttpStatusCode.Created),
+            r => Assert.Equal(HttpStatusCode.Conflict, r.StatusCode));
+    }
+
     private static async Task<IDictionary<string, string[]>> ErrosDeValidacaoAsync(HttpResponseMessage resposta)
     {
         Assert.Equal(HttpStatusCode.BadRequest, resposta.StatusCode);
