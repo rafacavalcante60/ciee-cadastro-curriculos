@@ -150,8 +150,9 @@ build do frontend.
 
 A pasta [`samples/`](samples/README.md) traz currículos fictícios em PDF para
 testar a importação à mão, pelo botão "Preencher a partir de um PDF" ou pelo
-Swagger. Um teste de integração envia cada um à API e compara a resposta com o
-`samples/esperado.json`.
+Swagger. Um teste de integração envia à API cada PDF listado no
+`samples/esperado.json` e compara a resposta com o resultado declarado ali; o
+`nao-e-pdf.pdf` tem teste próprio.
 
 | Arquivo | O que exercita |
 | --- | --- |
@@ -215,7 +216,7 @@ pedido:
 - **OCR para PDF digitalizado**: o aviso orienta a digitar os dados.
 - **Testes end-to-end**: as regras são cobertas por testes de integração da
   API e por testes do formulário e do serviço HTTP no frontend; os quatro
-  fluxos foram conferidos à mão no navegador.
+  fluxos foram percorridos no navegador ao fim do desenvolvimento.
 - **Deduplicação por nome ou telefone**: só o e-mail é único.
 - **Validação de DDD existente e do nono dígito** no telefone: aceita dez ou
   onze dígitos.

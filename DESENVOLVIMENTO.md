@@ -268,26 +268,33 @@ aplicação conferida num clone limpo pelos dois caminhos.
   ferramentas, as amostras com o que cada uma exercita, as decisões técnicas e o
   fora de escopo com o motivo de cada item. O README do `frontend/`, gerado pelo
   Angular CLI em inglês, foi apagado.
-- **Glossário e ADRs não foram feitos**, embora o ticket peça. As três decisões
-  que os ADRs guardariam (PdfPig, heurística, projeto único) estão em poucas
-  linhas na seção "Decisões técnicas" do README.
+- **ADRs não foram feitos**, embora o ticket peça, e o glossário foi apagado
+  (ver Organização). As três decisões que os ADRs guardariam (PdfPig,
+  heurística, projeto único) estão, com alternativas e motivo, na seção
+  "Decisões técnicas" do README.
 - **CI com Testcontainers**, e não com um SQL Server declarado como serviço do
   workflow: o runner do GitHub já tem Docker, então o teste roda igual na
   máquina e no CI, sem configuração própria.
 - **Clone limpo** do GitHub nos dois caminhos: `docker compose up --build` com
   volume novo, e o caminho com SDKs (`dotnet ef database update`, `dotnet run`,
-  `npm start`). Nos dois, um roteiro no Chrome headless percorreu os quatro
-  fluxos: erro de validação, cadastro manual, e-mail repetido, PDF que preenche
-  o formulário, PDF digitalizado que mantém o digitado, listagem do mais
-  recente para o mais antigo, detalhes e id inexistente.
+  `npm start`). Nos dois, um roteiro no Chrome headless percorreu cadastro
+  manual, cadastro com PDF, listagem e detalhes, incluindo os desvios: erro de
+  validação, e-mail repetido, PDF digitalizado que mantém o digitado e id
+  inexistente.
 - **Achado ao conferir:** o telefone aparece nos detalhes só com dígitos
   (`11912345678`). Não corrigi; ficou nas melhorias.
 - **Erro no próprio registro:** a seção de organização dizia que nenhum commit
   tinha build quebrado, o que era falso. Corrigido, com os commits.
+- A revisão apontou que o README dizia que todas as amostras passam pelo
+  `esperado.json` (o `nao-e-pdf.pdf` tem teste à parte) e que o registro
+  afirmava conferência à mão antes de ela acontecer; corrigi os dois. Rejeitei
+  tirar de "Melhorias" o que já está em "Fora de escopo": um diz o que ficou de
+  fora, o outro o que eu faria primeiro, para leitores diferentes.
 
 ## Como verifiquei
 
-Medido em 1º de outubro de 2026, no commit da fatia 8, no WSL2 (Linux sobre Windows).
+Medido em 1º de outubro de 2026, com o código do commit `229f88c` (a fatia 8
+só mexe em documentação e CI), no WSL2 (Linux sobre Windows).
 
 | Projeto | Testes |
 |---|---|
@@ -320,8 +327,9 @@ aquecimento:
 | `curriculo-digitalizado.pdf` | 2,8 ms | 5,3 ms |
 | `curriculo-corrompido.pdf` | 2,5 ms | 4,3 ms |
 
-Além dos testes, cada fatia foi conferida à mão com a aplicação rodando, e os
-quatro fluxos foram percorridos no navegador ao fim da fatia 8.
+Além dos testes, cada fatia foi conferida à mão com a aplicação rodando, e ao
+fim da fatia 8 um roteiro no Chrome headless percorreu os quatro fluxos nos dois
+caminhos de execução.
 
 ## Erros da IA que precisei corrigir
 
@@ -335,8 +343,22 @@ Os detalhes estão em cada fatia; aqui, juntos:
 - Implementou um aviso único onde a especificação pedia uma lista, e as duas
   revisões automáticas não perceberam (fatia 6).
 - Pôs uma linha de coautoria no commit `e72021c`, contra a regra que eu tinha
-  dado de não fazer isso.
+  dado de não fazer isso (entre as fatias 2 e 3).
 - Afirmou neste registro que nenhum commit tinha build quebrado (fatia 8).
+
+## Dificuldades
+
+- **Ambiente dos testes de frontend:** o Chrome do puppeteer mudou de API na
+  versão 25 e não baixava sem `unzip`; levou mais tempo que o próprio teste
+  (fatia 1).
+- **Texto do PDF:** o texto da página no PdfPig vem sem quebras de linha, e a
+  heurística de nome trabalha linha a linha; foi preciso trocar pelo extrator
+  que preserva as linhas (fatia 5).
+- **Detalhes do ASP.NET que não aparecem no código:** upload acima de 64 KB vai
+  para arquivo temporário, e o `dotnet ef` grava o `schema.sql` com BOM. Os dois
+  só apareceram testando fora do caminho feliz (fatias 2 e 5).
+- **Revisão automática não substitui ler a spec:** o aviso único da fatia 6
+  passou pelas duas revisões e só apareceu no teste à mão.
 
 ## Tempo dedicado
 
