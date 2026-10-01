@@ -41,9 +41,9 @@ public class CandidatosTestes : IAsyncLifetime
         Assert.NotNull(criado);
         Assert.Equal($"/api/candidatos/{criado!.Id}", resposta.Headers.Location?.OriginalString);
 
-        var lista = await _cliente.GetFromJsonAsync<List<CandidatoResposta>>("/api/candidatos");
+        var lista = await ListarAsync();
 
-        var listado = Assert.Single(lista!);
+        var listado = Assert.Single(lista);
         Assert.Equal(criado.Id, listado.Id);
         Assert.Equal("Maria da Silva", listado.NomeCompleto);
         Assert.Equal("maria.silva@exemplo.com", listado.Email);
@@ -67,19 +67,19 @@ public class CandidatosTestes : IAsyncLifetime
         _relogio.Agora = new DateTimeOffset(2026, 2, 20, 9, 0, 0, TimeSpan.Zero);
         await CadastrarAsync("Candidata de fevereiro", "fevereiro@exemplo.com");
 
-        var lista = await _cliente.GetFromJsonAsync<List<CandidatoResposta>>("/api/candidatos");
+        var lista = await ListarAsync();
 
         Assert.Equal(
             new[] { "Candidata de março", "Candidata de fevereiro", "Candidata de janeiro" },
-            lista!.Select(candidato => candidato.NomeCompleto));
+            lista.Select(candidato => candidato.NomeCompleto));
     }
 
     [Fact]
     public async Task Listagem_vazia_devolve_lista_vazia()
     {
-        var lista = await _cliente.GetFromJsonAsync<List<CandidatoResposta>>("/api/candidatos");
+        var lista = await ListarAsync();
 
-        Assert.Empty(lista!);
+        Assert.Empty(lista);
     }
 
     [Fact]
@@ -93,8 +93,8 @@ public class CandidatosTestes : IAsyncLifetime
         });
 
         Assert.Equal(HttpStatusCode.Created, resposta.StatusCode);
-        var lista = await _cliente.GetFromJsonAsync<List<CandidatoResposta>>("/api/candidatos");
-        Assert.Equal(new DateTime(2026, 3, 10, 14, 30, 0, DateTimeKind.Utc), Assert.Single(lista!).DataCadastro);
+        var lista = await ListarAsync();
+        Assert.Equal(new DateTime(2026, 3, 10, 14, 30, 0, DateTimeKind.Utc), Assert.Single(lista).DataCadastro);
     }
 
     [Fact]
@@ -102,10 +102,13 @@ public class CandidatosTestes : IAsyncLifetime
     {
         await CadastrarAsync("Ana Souza", "  Ana.Souza@Exemplo.COM ");
 
-        var lista = await _cliente.GetFromJsonAsync<List<CandidatoResposta>>("/api/candidatos");
+        var lista = await ListarAsync();
 
-        Assert.Equal("ana.souza@exemplo.com", Assert.Single(lista!).Email);
+        Assert.Equal("ana.souza@exemplo.com", Assert.Single(lista).Email);
     }
+
+    private async Task<List<CandidatoResposta>> ListarAsync() =>
+        (await _cliente.GetFromJsonAsync<List<CandidatoResposta>>("/api/candidatos"))!;
 
     private async Task CadastrarAsync(string nomeCompleto, string email)
     {

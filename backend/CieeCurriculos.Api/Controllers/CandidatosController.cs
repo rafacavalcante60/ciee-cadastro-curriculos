@@ -30,15 +30,7 @@ public class CandidatosController : ControllerBase
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Cadastrar(NovoCandidato novo, CancellationToken cancelamento)
     {
-        var candidato = new Candidato
-        {
-            NomeCompleto = novo.NomeCompleto,
-            Email = novo.Email.Trim().ToLowerInvariant(),
-            Telefone = novo.Telefone,
-            AreaOuCargoDeInteresse = novo.AreaOuCargoDeInteresse,
-            ResumoProfissional = novo.ResumoProfissional,
-            DataCadastro = _relogio.GetUtcNow().UtcDateTime
-        };
+        var candidato = novo.ParaCandidato(dataCadastro: _relogio.GetUtcNow().UtcDateTime);
 
         _contexto.Candidatos.Add(candidato);
         await _contexto.SaveChangesAsync(cancelamento);

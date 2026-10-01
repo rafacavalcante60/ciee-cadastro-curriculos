@@ -10,4 +10,19 @@ public record NovoCandidato(
     string Email,
     string? Telefone,
     string? AreaOuCargoDeInteresse,
-    string? ResumoProfissional);
+    string? ResumoProfissional)
+{
+    /// <summary>
+    /// Monta o candidato a gravar, com o e-mail normalizado para minúsculas e sem
+    /// espaços nas pontas, em vez de depender da collation do banco.
+    /// </summary>
+    public Candidato ParaCandidato(DateTime dataCadastro) => new()
+    {
+        NomeCompleto = NomeCompleto,
+        Email = Email.Trim().ToLowerInvariant(),
+        Telefone = Telefone,
+        AreaOuCargoDeInteresse = AreaOuCargoDeInteresse,
+        ResumoProfissional = ResumoProfissional,
+        DataCadastro = dataCadastro
+    };
+}

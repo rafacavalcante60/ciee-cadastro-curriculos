@@ -58,9 +58,9 @@ export class CadastroCandidatoComponent {
     this.servico.criar({
       nomeCompleto: valor.nomeCompleto,
       email: valor.email,
-      telefone: opcional(valor.telefone),
-      areaOuCargoDeInteresse: opcional(valor.areaOuCargoDeInteresse),
-      resumoProfissional: opcional(valor.resumoProfissional)
+      telefone: nuloSeEmBranco(valor.telefone),
+      areaOuCargoDeInteresse: nuloSeEmBranco(valor.areaOuCargoDeInteresse),
+      resumoProfissional: nuloSeEmBranco(valor.resumoProfissional)
     }).subscribe({
       next: () => this.router.navigateByUrl('/candidatos'),
       error: () => {
@@ -72,6 +72,6 @@ export class CadastroCandidatoComponent {
 }
 
 /** Campo opcional deixado em branco é gravado como ausente, não como texto vazio. */
-function opcional(valor: string): string | null {
+function nuloSeEmBranco(valor: string): string | null {
   return valor.trim() === '' ? null : valor;
 }
