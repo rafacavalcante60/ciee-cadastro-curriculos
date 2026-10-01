@@ -164,7 +164,7 @@ sendo o mesmo `POST` de JSON.
 cerca de 40 minutos.
 
 PDF digitalizado, protegido por senha ou corrompido devolve 200 com os campos
-`null` e um aviso; a tela mostra o aviso como informação, e o cadastro manual
+`null` e um aviso; a tela mostra os avisos como informação, e o cadastro manual
 segue normalmente.
 
 - **Falha de leitura é 200, não 4xx.** O arquivo é um PDF, então a culpa não é
@@ -174,8 +174,13 @@ segue normalmente.
   criptografia do PdfPig indica senha; qualquer outra exceção vira "pode estar
   corrompido" e vai para o log. Capturo `Exception` porque o PdfPig não tem um
   tipo único para arquivo malformado.
-- **O aviso vem pronto da API**, em português, como o `detail` dos erros. Na
-  tela usa `role="status"` e cor neutra, e não `role="alert"` em vermelho.
+- **Os avisos vêm prontos da API**, em português, como o `detail` dos erros. Na
+  tela usam `role="status"` e cor neutra, e não `role="alert"` em vermelho.
+- **Uma lista de avisos, não um texto só.** Eu tinha implementado um campo
+  `aviso` único, e as duas revisões não perceberam que a spec pedia "uma
+  coleção de avisos legíveis"; notei ao testar à mão. Agora a lista também
+  diz qual campo não foi encontrado, um aviso por campo. Quando a leitura
+  falha, vai um aviso só, para não repetir três vezes a mesma causa.
 - **Amostras pelo mesmo gerador:** o digitalizado é a página do currículo
   completo convertida em imagem; o protegido é o mesmo currículo
   criptografado; o corrompido é o mesmo arquivo cortado no primeiro terço.
@@ -186,6 +191,10 @@ segue normalmente.
   que já tinha sido digitado. Agora, com aviso, o formulário fica como estava.
   Rejeitei levar a checagem de texto vazio para junto das outras falhas de
   leitura: o ticket pede o teste de unidade justamente sobre o texto.
+- Ao testar à mão, estranhei que área de interesse e resumo não vinham do PDF.
+  Cheguei a implementar a leitura das seções "Objetivo" e "Resumo", mas
+  desfiz: o enunciado pede só nome, e-mail e telefone, e seria mais uma
+  heurística frágil fora do pedido.
 
 ## Limitações conhecidas
 
@@ -195,6 +204,7 @@ segue normalmente.
 | Nome pela primeira linha de palavras capitalizadas, quando não há rótulo `Nome:` | Um cabeçalho como "Dados Pessoais" antes do nome vira o nome. Nome escrito todo em minúsculas não é reconhecido: vale a próxima linha que pareça nome, como "Experiência Profissional", ou o campo fica vazio. |
 | Diagramação em colunas | O texto é lido na ordem em que foi gravado no arquivo. Uma coluna lateral com "Inglês Avançado" antes do nome faz dele o nome. |
 | Telefone só nos formatos brasileiros, com DDD | Número de outro país fica vazio ou, como `+44 20 7946 0958`, vira um número brasileiro errado. Número sem DDD fica vazio. |
+| Só nome, e-mail e telefone são extraídos, como pede o enunciado | Área ou cargo de interesse e resumo profissional são sempre digitados, mesmo que o currículo tenha seções de objetivo e resumo. |
 | Mais de um e-mail ou telefone no currículo | Vale o primeiro que aparece, que pode ser o de uma referência. |
 | Heurísticas em vez de um modelo de linguagem (LLM) | Previsível, testável, sem custo por currículo e sem enviar dados pessoais a um serviço externo. Em troca, erra em layouts fora do padrão que um LLM entenderia, e sobra mais campo para corrigir à mão. |
 
