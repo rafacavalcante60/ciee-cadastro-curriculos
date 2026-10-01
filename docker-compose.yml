@@ -1,4 +1,5 @@
-# SQL Server para desenvolvimento e para os testes de integração.
+# Aplicação completa: docker compose up --build
+# Só o SQL Server, para rodar com os SDKs e para os testes: docker compose up -d banco
 # A senha vem do arquivo .env (copie de .env.example); nada de credencial no repositório.
 services:
   banco:
@@ -20,6 +21,47 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
+
+  # A API não aplica migrations ao subir: o schema é este passo explícito, que
+  # roda uma vez e termina. Reaproveita a imagem do banco, que já traz o sqlcmd.
+  migracao:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    depends_on:
+      banco:
+        condition: service_healthy
+    environment:
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?defina MSSQL_SA_PASSWORD no arquivo .env}
+    volumes:
+      - ./backend/schema.sql:/schema.sql:ro
+    entrypoint:
+      - /bin/bash
+      - -c
+      - |
+        set -e
+        /opt/mssql-tools18/bin/sqlcmd -C -b -S banco -U sa -P "$$MSSQL_SA_PASSWORD" -Q "IF DB_ID('CieeCurriculos') IS NULL CREATE DATABASE CieeCurriculos"
+        /opt/mssql-tools18/bin/sqlcmd -C -b -S banco -U sa -P "$$MSSQL_SA_PASSWORD" -d CieeCurriculos -i /schema.sql
+
+  api:
+    build: ./backend
+    depends_on:
+      migracao:
+        condition: service_completed_successfully
+    environment:
+      ConnectionStrings__CurriculosDb: "Server=banco,1433;Database=CieeCurriculos;User Id=sa;Password=${MSSQL_SA_PASSWORD:?defina MSSQL_SA_PASSWORD no arquivo .env};TrustServerCertificate=True"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/api/saude"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_PORTA:-8080}:80"
 
 volumes:
   dados-banco:

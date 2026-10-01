@@ -40,7 +40,8 @@ if (aplicacao.Environment.IsDevelopment())
     aplicacao.UseSwaggerUI();
 }
 
-// Migrations não são aplicadas aqui: criar o schema é um passo explícito do README.
+// Migrations não são aplicadas aqui: criar o schema é um passo explícito, feito
+// pelo serviço de migração do compose ou pelo dotnet ef.
 
 aplicacao.MapControllers();
 

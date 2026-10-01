@@ -42,7 +42,7 @@ public class SaudeController : ControllerBase
             BancoDaAplicacao: bancoDaAplicacaoExiste ? "ok" : "ausente",
             Detalhe: bancoDaAplicacaoExiste
                 ? null
-                : "O servidor responde, mas o banco da aplicação não existe. Crie a estrutura com 'dotnet ef database update'."));
+                : "O servidor responde, mas o banco da aplicação não existe. Crie a estrutura com 'docker compose run --rm migracao' ou 'dotnet ef database update'."));
     }
 
     // Conecta ao master para saber se o servidor responde mesmo sem o banco da aplicação.
