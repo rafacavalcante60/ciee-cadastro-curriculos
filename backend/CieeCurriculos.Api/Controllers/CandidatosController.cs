@@ -44,4 +44,22 @@ public class CandidatosController : ControllerBase
 
         return candidatos.Select(CandidatoResposta.De);
     }
+
+    // NotFound() vira ProblemDetails pelo [ApiController], sem corpo montado aqui.
+    [HttpGet("{id:int}")]
+    [ProducesResponseType(typeof(CandidatoResposta), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<CandidatoResposta>> Detalhar(int id, CancellationToken cancelamento)
+    {
+        var candidato = await _contexto.Candidatos
+            .AsNoTracking()
+            .SingleOrDefaultAsync(c => c.Id == id, cancelamento);
+
+        if (candidato is null)
+        {
+            return NotFound();
+        }
+
+        return CandidatoResposta.De(candidato);
+    }
 }

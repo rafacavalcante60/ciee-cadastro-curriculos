@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using CieeCurriculos.Api.Candidatos;
 using CieeCurriculos.Api.Testes.Infraestrutura;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CieeCurriculos.Api.Testes;
 
@@ -105,6 +106,44 @@ public class CandidatosTestes : IAsyncLifetime
         var lista = await ListarAsync();
 
         Assert.Equal("ana.souza@exemplo.com", Assert.Single(lista).Email);
+    }
+
+    [Fact]
+    public async Task Detalhes_de_candidato_existente_devolvem_os_dados_gravados()
+    {
+        var resumoLongo = string.Concat(Enumerable.Repeat("Experiência com atendimento e rotinas administrativas. ", 30));
+        var resposta = await _cliente.PostAsJsonAsync("/api/candidatos", new
+        {
+            nomeCompleto = "Maria da Silva",
+            email = "maria.silva@exemplo.com",
+            telefone = "11987654321",
+            areaOuCargoDeInteresse = "Desenvolvimento de software",
+            resumoProfissional = resumoLongo
+        });
+        var criado = (await resposta.Content.ReadFromJsonAsync<CandidatoResposta>())!;
+
+        var detalhes = await _cliente.GetAsync($"/api/candidatos/{criado.Id}");
+
+        Assert.Equal(HttpStatusCode.OK, detalhes.StatusCode);
+        var candidato = (await detalhes.Content.ReadFromJsonAsync<CandidatoResposta>())!;
+        Assert.Equal(criado.Id, candidato.Id);
+        Assert.Equal("Maria da Silva", candidato.NomeCompleto);
+        Assert.Equal("maria.silva@exemplo.com", candidato.Email);
+        Assert.Equal("11987654321", candidato.Telefone);
+        Assert.Equal("Desenvolvimento de software", candidato.AreaOuCargoDeInteresse);
+        Assert.Equal(resumoLongo, candidato.ResumoProfissional);
+        Assert.Equal(new DateTime(2026, 3, 10, 14, 30, 0, DateTimeKind.Utc), candidato.DataCadastro);
+    }
+
+    [Fact]
+    public async Task Detalhes_de_identificador_inexistente_devolvem_404_em_ProblemDetails()
+    {
+        var resposta = await _cliente.GetAsync("/api/candidatos/999999");
+
+        Assert.Equal(HttpStatusCode.NotFound, resposta.StatusCode);
+        Assert.Equal("application/problem+json", resposta.Content.Headers.ContentType?.MediaType);
+        var problema = await resposta.Content.ReadFromJsonAsync<ProblemDetails>();
+        Assert.Equal(404, problema?.Status);
     }
 
     private async Task<List<CandidatoResposta>> ListarAsync() =>
