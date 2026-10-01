@@ -1,0 +1,25 @@
+# SQL Server para desenvolvimento e para os testes de integração.
+# A senha vem do arquivo .env (copie de .env.example); nada de credencial no repositório.
+services:
+  banco:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: ciee-curriculos-banco
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?defina MSSQL_SA_PASSWORD no arquivo .env}
+      MSSQL_PID: Developer
+    ports:
+      - "${MSSQL_PORTA:-1433}:1433"
+    volumes:
+      - dados-banco:/var/opt/mssql
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$$MSSQL_SA_PASSWORD" -Q "SELECT 1"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  dados-banco:
