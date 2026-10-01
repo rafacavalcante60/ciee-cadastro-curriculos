@@ -192,6 +192,7 @@ public class ValidacaoDoCadastroTestes : IAsyncLifetime
         Assert.Equal(HttpStatusCode.BadRequest, resposta.StatusCode);
         Assert.Equal("application/problem+json", resposta.Content.Headers.ContentType?.MediaType);
         var problema = await resposta.Content.ReadFromJsonAsync<ValidationProblemDetails>();
-        return problema!.Errors;
+        Assert.Equal("Um ou mais campos estão inválidos.", problema!.Title);
+        return problema.Errors;
     }
 }

@@ -1,5 +1,6 @@
-using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using CieeCurriculos.Api.Dados;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
@@ -9,6 +10,13 @@ var construtor = WebApplication.CreateBuilder(args);
 // da propriedade C# (NomeCompleto): o frontend associa cada erro ao seu campo.
 construtor.Services.AddControllers(opcoes =>
     opcoes.ModelMetadataDetailsProviders.Add(new SystemTextJsonValidationMetadataProvider()));
+construtor.Services.AddProblemDetails(opcoes => opcoes.CustomizeProblemDetails = contexto =>
+{
+    if (contexto.ProblemDetails is ValidationProblemDetails)
+    {
+        contexto.ProblemDetails.Title = "Um ou mais campos estão inválidos.";
+    }
+});
 construtor.Services.AddSingleton(TimeProvider.System);
 construtor.Services.AddEndpointsApiExplorer();
 construtor.Services.AddSwaggerGen(opcoes =>
