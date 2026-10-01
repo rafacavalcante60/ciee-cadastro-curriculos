@@ -198,7 +198,8 @@ segue normalmente.
 
 ## Fatia 7: aplicação completa no Docker Compose
 
-[#9](https://github.com/rafacavalcante60/ciee-cadastro-curriculos/issues/9).
+[#9](https://github.com/rafacavalcante60/ciee-cadastro-curriculos/issues/9) ·
+cerca de 40 minutos.
 
 `docker compose up --build` sobe banco, migração, API e frontend sem .NET, Node
 nem `dotnet-ef` na máquina; `docker compose up -d banco` continua subindo só o
