@@ -1,134 +1,87 @@
 # Registro do desenvolvimento
 
-Relato de como o trabalho foi organizado, das decisões tomadas e da participação
-de ferramentas de inteligência artificial. Escrito ao longo do desenvolvimento,
-ao fim de cada fatia de trabalho, e não reconstruído no final.
+Como o trabalho foi organizado, que decisões tomei e como usei IA. Atualizado
+ao fim de cada fatia de trabalho, não reconstruído no final.
 
-## Ferramentas de IA utilizadas
+## Resumo
 
-- **Claude Code** (Anthropic), modelo **Claude Opus 5**, usado como par de
-  programação ao longo de todo o desafio: discussão de desenho, redação da
-  especificação e das issues, implementação e revisão.
+- **Ferramenta:** Claude Code (Anthropic), modelo Claude Opus 5, como par de
+  programação em todo o desafio.
+- **Fluxo:** primeiro o modelo me questionou sobre o desenho (27 perguntas em
+  quatro rodadas), depois escrevi a especificação e o recorte em sete tickets, e
+  só então implementei, um ticket por vez. Não pedi o projeto pronto.
+- **Discordei do modelo** em duas decisões de produto (abaixo).
+- **Toda fatia passa por revisão** antes de fechar: uma conferindo os padrões
+  do projeto e outra conferindo o ticket. Os achados e o que fiz com eles estão
+  registrados em cada fatia.
+- **Verificação:** testes de integração contra SQL Server real e conferência
+  manual com a aplicação rodando.
 
-O uso não foi "pedir o projeto pronto". O fluxo adotado foi: primeiro uma sessão
-longa de questionamento em que o modelo me interrogou sobre as decisões em vez
-de assumi-las; depois a especificação e o recorte em tickets; só então a
-implementação, ticket a ticket.
+## Decisões em que discordei do modelo
 
-## Organização do trabalho
+- **E-mail único.** O modelo recomendou não restringir, porque não foi pedido.
+  Discordei: cadastro duplicado é um problema real de recrutamento, e uma
+  mensagem de erro específica ajuda mais do que nenhuma verificação. Ficou com
+  validação na aplicação e índice único no banco.
+- **Formato de telefone.** O modelo recomendou texto livre, para que um telefone
+  estranho vindo de um PDF não bloqueasse o cadastro. Preferi um controle
+  simples: dez ou onze dígitos após normalização, com o campo opcional.
 
-Antes de escrever código, o trabalho passou por três etapas:
+## Organização
 
-1. **Questionamento do desenho.** Vinte e sete perguntas em quatro rodadas, cada
-   uma com uma recomendação e os motivos — escopo, infraestrutura, modelo de
-   dados, contrato da API, estratégia de testes, documentação e critério de
-   parada. Decidi contra a recomendação em dois pontos (ver abaixo).
-2. **Especificação** publicada como issue, com problema, solução, histórias de
-   usuário, decisões de implementação, decisões de teste e o que ficou fora de
-   escopo.
-3. **Recorte em sete tickets**, cada um uma fatia vertical verificável, com as
-   dependências declaradas entre eles.
+1. **Questionamento do desenho:** escopo, infraestrutura, modelo de dados,
+   contrato da API, testes, documentação e critério de parada, cada pergunta
+   com recomendação e motivo.
+2. **Especificação** publicada como issue.
+3. **Sete tickets**, cada um uma fatia vertical verificável, com dependências
+   declaradas.
 
-Os commits são pequenos, em português, seguindo Conventional Commits, e nenhum
-entra com a compilação quebrada ou teste vermelho.
+Commits pequenos, em português, seguindo Conventional Commits. Nenhum entra com
+compilação quebrada ou teste vermelho.
 
-## Decisões em que discordei da recomendação do modelo
+## Fatia 1: esqueleto e conexão com o banco
 
-- **E-mail único.** A recomendação foi não ter restrição de unicidade, por não
-  ter sido pedida. Discordei: cadastro duplicado de candidato é um problema real
-  de recrutamento, e a mensagem de erro específica é mais útil que a ausência de
-  verificação. Entrou com validação na aplicação mais índice único no banco.
-- **Validação de formato de telefone.** A recomendação foi aceitar texto livre,
-  para que um telefone em formato estranho vindo de um PDF não bloqueasse o
-  cadastro. Preferi um controle simples. Ficou em dez ou onze dígitos após
-  normalização, mantendo o campo opcional.
+Monorepo com `frontend/` e `backend/`, SQL Server em container, testes
+configurados nos dois lados e um endpoint de saúde. Nenhum comportamento de
+produto ainda. **Tempo:** cerca de 2 horas, incluindo questionamento,
+especificação e tickets.
 
-## Fatia 1 — Esqueleto do projeto e conexão com o banco
+**Onde a IA ajudou:** esqueleto dos dois projetos, fixture de Testcontainers,
+compose e README.
 
-Monorepo com `frontend/` e `backend/`, SQL Server 2022 em container por compose,
-infraestrutura de testes de pé nos dois lados e um endpoint de verificação de
-saúde. Nenhum comportamento de produto ainda: o objetivo é que um clone novo
-suba e que as fatias seguintes sejam verificáveis.
+**O que corrigi ou adaptei:**
 
-**Em que a IA ajudou.** Geração do esqueleto dos dois projetos e da
-infraestrutura de teste de integração, redação do compose e do README. Exemplo
-de pedido: implementar a fatia descrita no ticket de esqueleto, com fixture de
-Testcontainers que aceite uma connection string por variável de ambiente.
+- **Endpoint de saúde redesenhado.** A primeira versão só dizia se o banco
+  estava acessível, o que confundia container desligado com banco ainda não
+  criado. Agora relata os dois separadamente e só devolve 503 quando o servidor
+  não responde.
+- **Chrome dos testes de frontend.** `puppeteer.executablePath()` virou
+  assíncrono na versão 25; passei a usar `computeExecutablePath`. O download
+  falhava sem mensagem por falta de `unzip` no sistema; resolvi com a
+  dependência `yauzl`. `libnss3` e `libasound2t64` continuam necessárias e
+  estão no README.
+- **Sem senha versionada.** Credenciais vêm de variável de ambiente ou
+  `dotnet user-secrets`, não do `appsettings`.
 
-**O que precisou de correção ou adaptação:**
+**Achados da revisão:**
 
-- **O endpoint de saúde foi redesenhado.** A primeira versão respondia apenas
-  "banco acessível ou não", via `CanConnectAsync`. Ao verificar contra o
-  container, ficou claro que essa resposta confunde duas situações que pedem
-  providências opostas: o container desligado e o banco ainda não criado. A
-  versão final relata os dois separadamente, e devolve 503 só quando o servidor
-  está inalcançável — quando o servidor responde mas o banco não existe, o
-  próprio corpo da resposta diz para rodar a migration.
-- **`puppeteer.executablePath()` passou a ser assíncrono** na versão 25, e a
-  configuração do Karma tem de ser síncrona. O caminho do Chrome passou a ser
-  resolvido por `computeExecutablePath` do `@puppeteer/browsers`, usando o
-  identificador de build que o puppeteer expõe — solução síncrona e que funciona
-  nas três plataformas.
-- **O download do Chrome falhava sem mensagem clara.** A instalação do puppeteer
-  deixava os diretórios de cache vazios. A causa, encontrada só ao rodar a
-  instalação manualmente, era a ausência do utilitário `unzip` no sistema.
-  Resolvido adicionando a dependência opcional `yauzl` ao projeto, em vez de
-  exigir um pacote do sistema — assim a integração contínua também não depende
-  disso.
-- **Bibliotecas de sistema do Chrome.** Mesmo instalado, o Chrome não inicia sem
-  `libnss3` e `libasound2t64`, ausentes nesta instalação enxuta do Ubuntu. É o
-  único passo do projeto que exige instalação no sistema, e está documentado no
-  README.
-- **`appsettings.Development.json` não recebeu senha funcional.** Seria o
-  caminho mais confortável para quem avalia, mas versionaria credencial. Ficou
-  placeholder no `appsettings.json` e as credenciais reais vêm de variável de
-  ambiente ou de `dotnet user-secrets`.
+- Senha real no README, contradizendo o próprio texto: trocada por `SUA_SENHA`.
+  Mantive a senha no `.env.example` de propósito, porque um placeholder ali faz
+  o container falhar num clone novo.
+- Connection string malformada vazava como 500 (`ArgumentException`, não
+  `SqlException`). Corrigido para 503, com teste de regressão.
+- Faltava `provideAnimationsAsync()`, que o `ng add` não registrou. Adicionado
+  junto com `provideHttpClient()`.
+- README prometia `docs/adr/` e um passo de migration que ainda não tem efeito.
+  Ajustado.
+- Comentários em inglês herdados do scaffold, traduzidos.
+- **Rejeitado:** transformar os campos de situação da saúde em enum. São quatro
+  valores num endpoint de diagnóstico, e um conversor de serialização seria
+  mais código do que o problema pede.
 
-**Como verifiquei.** Três testes de integração contra SQL Server real, subido
-por Testcontainers: servidor alcançável, banco da aplicação ausente relatado
-como tal, e 503 quando o servidor não responde. Além dos testes, verificação
-manual com a aplicação rodando contra o container do compose, conferindo a
-resposta de `/api/saude` e o documento do Swagger.
-
-**Revisão da fatia.** Submeti a fatia a uma revisão em dois eixos independentes,
-um conferindo aderência aos padrões do projeto e outro conferindo fidelidade ao
-ticket. Achados que viraram correção:
-
-- **Senha de desenvolvimento no README.** O passo de criação do schema trazia a
-  senha real do `.env.example`, oito linhas depois de o próprio README afirmar
-  que nenhuma credencial é versionada. Trocada por `SUA_SENHA`. A senha
-  permanece apenas no `.env.example`, que é um arquivo de exemplo por
-  definição — essa parte eu mantive de propósito, porque o ticket pede um
-  exemplo que satisfaça a política de complexidade do SQL Server, e um
-  placeholder ali faria o container falhar num clone novo.
-- **Falha 500 em connection string malformada.** O método que verifica o
-  servidor capturava apenas `SqlException`. Sondando os casos reais, descobri
-  que configuração ausente, vazia ou com o placeholder respondem 503
-  corretamente, mas uma string **malformada** estoura `ArgumentException` na
-  montagem da conexão, antes de qualquer tentativa de rede, e vazava como 500 —
-  justamente o erro de configuração que o endpoint existe para diagnosticar.
-  Corrigido, com teste de regressão parametrizado nos três casos.
-- **Angular Material sem o provedor de animações.** O `ng add` foi executado com
-  animações habilitadas, mas não registrou `provideAnimationsAsync()` na
-  configuração da aplicação. Teria falhado no primeiro componente de Material da
-  fatia seguinte. Adicionado junto com `provideHttpClient()`.
-- **README citava `docs/adr/`, que ainda não existe.** Linha removida; os ADRs
-  entram na fatia de documentação.
-- **Promessa a mais no README.** O passo de criação do schema não tem efeito
-  enquanto não houver a primeira migration, que pertence à fatia de cadastro.
-  O texto agora diz isso, em vez de deixar quem avalia achando que algo quebrou.
-- **Comentários em inglês herdados do scaffold** do Karma, e o jargão "seam" sem
-  tradução. Ajustados: o projeto usa português de forma consistente.
-
-Um achado eu rejeitei: a sugestão de transformar os campos de situação da
-resposta de saúde em tipo próprio, em vez de texto. São quatro valores num
-endpoint de diagnóstico; um enum com conversor de serialização seria mais
-maquinaria do que o problema pede.
-
-**Tempo dedicado.** Aproximadamente 2 horas, cobrindo a sessão de
-questionamento do desenho, a especificação, o recorte em tickets e esta primeira
-fatia. Os horários dos commits não servem de medida: eles foram agrupados ao fim
-de cada bloco de trabalho.
+**Como verifiquei:** três testes de integração (servidor alcançável, banco
+ausente, servidor fora do ar) e chamadas manuais a `/api/saude` e ao Swagger
+com o container do compose.
 
 ## Limitações conhecidas
 
