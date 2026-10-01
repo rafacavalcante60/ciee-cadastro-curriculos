@@ -48,21 +48,18 @@ function traduzirFalha(erro: HttpErrorResponse): FalhaAoCadastrar {
     return { tipo: 'campos', erros: { email: erro.error?.detail ?? 'Já existe um candidato cadastrado com este e-mail.' } };
   }
 
-  // Com a API fora do ar, o proxy de desenvolvimento responde 500 e o Nginx 502:
-  // pelo status não dá para separar API caída de erro interno.
-  if (erro.status === 0 || erro.status >= 500) {
-    return { tipo: 'servidorIndisponivel' };
-  }
-
-  return { tipo: 'inesperada' };
+  return falhaGenerica(erro);
 }
 
 function traduzirFalhaNaExtracao(erro: HttpErrorResponse): FalhaNaExtracao {
   if (erro.status === 400) {
     return { tipo: 'arquivoInvalido', mensagem: erro.error?.detail ?? 'O arquivo enviado não pôde ser lido.' };
   }
-  if (erro.status === 0 || erro.status >= 500) {
-    return { tipo: 'servidorIndisponivel' };
-  }
-  return { tipo: 'inesperada' };
+  return falhaGenerica(erro);
+}
+
+// Com a API fora do ar, o proxy de desenvolvimento responde 500 e o Nginx 502:
+// pelo status não dá para separar API caída de erro interno.
+function falhaGenerica(erro: HttpErrorResponse): { tipo: 'servidorIndisponivel' } | { tipo: 'inesperada' } {
+  return erro.status === 0 || erro.status >= 500 ? { tipo: 'servidorIndisponivel' } : { tipo: 'inesperada' };
 }

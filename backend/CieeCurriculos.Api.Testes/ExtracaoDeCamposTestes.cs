@@ -88,6 +88,7 @@ public class ExtracaoDeCamposTestes
     [InlineData("MARIA APARECIDA DA SILVA", "Maria Aparecida da Silva")]
     [InlineData("JOÃO PEDRO DOS SANTOS E SOUZA", "João Pedro dos Santos e Souza")]
     [InlineData("Nome: ANA DE OLIVEIRA", "Ana de Oliveira")]
+    [InlineData("MARIA-JOSÉ D'ÁVILA", "Maria-José D'Ávila")]
     public void Nome_em_maiusculas_ganha_iniciais_maiusculas_com_particulas_minusculas(string linha, string esperado)
     {
         var campos = ExtracaoDeCampos.Extrair(linha);
@@ -125,7 +126,6 @@ public class ExtracaoDeCamposTestes
         Assert.Equal(esperado, campos.Telefone);
     }
 
-    // Um CPF sem pontuação tem 11 dígitos e passaria pela regra do telefone.
     [Theory]
     [InlineData("CPF: 12345678901")]
     [InlineData("CPF 123.456.789-01")]
@@ -141,6 +141,16 @@ public class ExtracaoDeCamposTestes
             """);
 
         Assert.Null(campos.Telefone);
+    }
+
+    [Theory]
+    [InlineData("RG — Tel: 11 98765-4321")]
+    [InlineData("CEP e telefone: 11 98765-4321")]
+    public void Rotulo_de_documento_sem_numero_nao_apaga_o_telefone_seguinte(string linha)
+    {
+        var campos = ExtracaoDeCampos.Extrair(linha);
+
+        Assert.Equal("11987654321", campos.Telefone);
     }
 
     [Fact]

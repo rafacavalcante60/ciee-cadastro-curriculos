@@ -90,35 +90,34 @@ public class ExtracaoDeCurriculoTestes : IAsyncLifetime
         Assert.Equal(new[] { "Envie um arquivo PDF." }, problema!.Errors["arquivo"]);
     }
 
-    public static IEnumerable<object[]> Amostras() => EsperadoDasAmostras().Keys.Select(arquivo => new object[] { arquivo });
+    // Percorre os PDFs da pasta, e não as chaves de esperado.json: amostra nova sem
+    // resultado declarado falha aqui em vez de ficar fora do teste.
+    public static IEnumerable<object[]> Amostras() =>
+        Directory.GetFiles(PastaDasAmostras, "*.pdf")
+            .Select(Path.GetFileName)
+            .Where(arquivo => arquivo != ArquivoQueNaoEPdf)
+            .Select(arquivo => new object[] { arquivo! });
 
     [Theory]
     [MemberData(nameof(Amostras))]
     public async Task Cada_amostra_produz_os_campos_declarados_em_esperado_json(string arquivo)
     {
+        var esperado = EsperadoDasAmostras();
+        Assert.True(esperado.ContainsKey(arquivo), $"{arquivo} não está em esperado.json.");
+
         var resposta = await EnviarAsync(arquivo, Amostra(arquivo));
 
         Assert.Equal(HttpStatusCode.OK, resposta.StatusCode);
-        Assert.Equal(EsperadoDasAmostras()[arquivo], await resposta.Content.ReadFromJsonAsync<CamposExtraidos>());
-    }
-
-    // Todo PDF de samples/ precisa estar em esperado.json: amostra nova sem resultado
-    // declarado ficaria fora do teste sem ninguém perceber.
-    [Fact]
-    public void Todo_pdf_de_samples_tem_resultado_declarado()
-    {
-        var pdfs = Directory.GetFiles(Path.Combine(AppContext.BaseDirectory, "samples"), "*.pdf")
-            .Select(Path.GetFileName)
-            .Where(arquivo => arquivo != ArquivoQueNaoEPdf);
-
-        Assert.Equal(pdfs.Order(), EsperadoDasAmostras().Keys.Order());
+        Assert.Equal(esperado[arquivo], await resposta.Content.ReadFromJsonAsync<CamposExtraidos>());
     }
 
     private const string ArquivoQueNaoEPdf = "nao-e-pdf.pdf";
 
+    private static readonly string PastaDasAmostras = Path.Combine(AppContext.BaseDirectory, "samples");
+
     private static Dictionary<string, CamposExtraidos> EsperadoDasAmostras() =>
         JsonSerializer.Deserialize<Dictionary<string, CamposExtraidos>>(
-            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "samples", "esperado.json")),
+            File.ReadAllText(Path.Combine(PastaDasAmostras, "esperado.json")),
             new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
 
     private static async Task<ProblemDetails> ProblemaAsync(HttpResponseMessage resposta)
@@ -129,7 +128,7 @@ public class ExtracaoDeCurriculoTestes : IAsyncLifetime
     }
 
     private static byte[] Amostra(string arquivo) =>
-        File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "samples", arquivo));
+        File.ReadAllBytes(Path.Combine(PastaDasAmostras, arquivo));
 
     private Task<HttpResponseMessage> EnviarAsync(string nomeDoArquivo, byte[] conteudo)
     {

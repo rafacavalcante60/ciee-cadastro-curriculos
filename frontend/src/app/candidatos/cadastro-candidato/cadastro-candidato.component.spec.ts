@@ -293,7 +293,7 @@ describe('CadastroCandidatoComponent', () => {
     it('mostra que está lendo o arquivo e impede outro envio enquanto isso', () => {
       escolherArquivo(curriculo);
 
-      const botao = tela.querySelector<HTMLButtonElement>('.importacao button')!;
+      const botao = tela.querySelector<HTMLButtonElement>('.extracao button')!;
       expect(botao.disabled).toBeTrue();
       expect(botao.textContent).toContain('Lendo currículo');
 
@@ -337,7 +337,7 @@ describe('CadastroCandidatoComponent', () => {
       respostaDaExtracao.error({ tipo: 'arquivoInvalido', mensagem: 'O arquivo enviado não é um PDF.' });
       fixture.detectChanges();
 
-      expect(tela.querySelector('.importacao [role="alert"]')?.textContent).toContain('O arquivo enviado não é um PDF.');
+      expect(tela.querySelector('.extracao [role="alert"]')?.textContent).toContain('O arquivo enviado não é um PDF.');
 
       preencherValido();
       enviar();
@@ -348,7 +348,7 @@ describe('CadastroCandidatoComponent', () => {
       escolherArquivo(new File([new Uint8Array(5 * 1024 * 1024 + 1)], 'grande.pdf', { type: 'application/pdf' }));
 
       expect(arquivosEnviados).toEqual([]);
-      expect(tela.querySelector('.importacao [role="alert"]')?.textContent).toContain('O arquivo excede o limite de 5 MB.');
+      expect(tela.querySelector('.extracao [role="alert"]')?.textContent).toContain('O arquivo excede o limite de 5 MB.');
     });
   });
 });

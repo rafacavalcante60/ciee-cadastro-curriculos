@@ -1,7 +1,7 @@
 <h1>Novo candidato</h1>
 
-<section class="importacao">
-  <input #seletor type="file" accept="application/pdf,.pdf" hidden (change)="importarCurriculo(seletor)">
+<section class="extracao">
+  <input #seletor type="file" accept="application/pdf,.pdf" hidden (change)="extrairCurriculo(seletor)">
   <button mat-stroked-button type="button" (click)="seletor.click()" [disabled]="extraindo()">
     @if (extraindo()) {
       <mat-spinner diameter="18" />

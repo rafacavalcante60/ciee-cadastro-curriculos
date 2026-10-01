@@ -1,6 +1,6 @@
 # Amostras de currículo
 
-Currículos fictícios para testar a importação de PDF, à mão pelo formulário ou
+Currículos fictícios para testar a extração de PDF, à mão pelo formulário ou
 pelo Swagger. O teste de integração `ExtracaoDeCurriculoTestes` envia cada PDF
 listado em `esperado.json` para `POST /api/curriculos/extracao` e compara a
 resposta com o resultado declarado ali.

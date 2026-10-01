@@ -17,7 +17,7 @@ public static class ExtracaoDeCampos
     // Um CPF sem pontuação tem 11 dígitos e passaria por telefone: números logo
     // depois do rótulo de um documento são apagados antes de procurar o telefone.
     private static readonly Regex NumeroDeDocumento = new(
-        @"\b(?:CPF|CNPJ|CEP|RG)\b[^\d\n]{0,10}\d[\d./-]*", RegexOptions.IgnoreCase);
+        @"\b(?:CPF|CNPJ|CEP|RG)\b(?:\s*n[º°o.])?[\s:.-]{0,3}\d[\d./-]*", RegexOptions.IgnoreCase);
 
     private static readonly Regex PalavraCapitalizada = new(@"^\p{Lu}[\p{L}'’-]*$");
 
@@ -52,18 +52,23 @@ public static class ExtracaoDeCampos
         return nome is not null && !nome.Any(char.IsLower) ? IniciaisMaiusculas(nome) : nome;
     }
 
+    // Hífen e apóstrofo também abrem inicial: Maria-José, D'Ávila.
+    private static readonly Regex InicioDeNome = new(@"(?<=^|[\s'’-])\p{L}");
+
     private static string IniciaisMaiusculas(string nome)
     {
         var cultura = CultureInfo.GetCultureInfo("pt-BR");
         var palavras = nome.ToLower(cultura).Split(' ').Select((palavra, posicao) =>
-            posicao > 0 && Particulas.Contains(palavra) ? palavra : char.ToUpper(palavra[0], cultura) + palavra[1..]);
+            posicao > 0 && Particulas.Contains(palavra)
+                ? palavra
+                : InicioDeNome.Replace(palavra, letra => letra.Value.ToUpper(cultura)));
         return string.Join(' ', palavras);
     }
 
     // Linhas de e-mail e de telefone caem aqui por terem caracteres que não são letras.
     private static bool PareceNome(string linha)
     {
-        var palavras = linha.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var palavras = linha.Split(' ');
         return palavras.All(p => Particulas.Contains(p) || PalavraCapitalizada.IsMatch(p))
             && palavras.Count(p => !Particulas.Contains(p)) >= 2
             && !palavras.Any(p => PalavrasDeTitulo.Contains(p.ToLowerInvariant()));

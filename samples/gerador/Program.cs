@@ -2,8 +2,8 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 
-// Gera os currículos fictícios de samples/. Os PDFs ficam versionados: o teste lê
-// sempre os mesmos bytes, em vez de depender da versão do gerador.
+// Os PDFs ficam versionados: o teste lê sempre os mesmos bytes, em vez de
+// depender da versão do gerador.
 QuestPDF.Settings.License = LicenseType.Community;
 
 var destino = args.Length > 0 ? args[0] : "..";

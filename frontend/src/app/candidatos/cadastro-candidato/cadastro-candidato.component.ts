@@ -46,7 +46,7 @@ export class CadastroCandidatoComponent {
   readonly extraindo = signal(false);
   readonly falhaNaExtracao = signal<string | null>(null);
 
-  importarCurriculo(seletor: HTMLInputElement): void {
+  extrairCurriculo(seletor: HTMLInputElement): void {
     const arquivo = seletor.files?.[0];
     // Limpo para que escolher o mesmo arquivo de novo dispare outro change.
     seletor.value = '';
