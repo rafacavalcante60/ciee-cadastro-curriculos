@@ -4,30 +4,42 @@
   <mat-form-field>
     <mat-label>Nome completo</mat-label>
     <input matInput formControlName="nomeCompleto" autocomplete="name" required>
+    <mat-error>{{ mensagemDeErro('nomeCompleto') }}</mat-error>
   </mat-form-field>
 
   <mat-form-field>
     <mat-label>E-mail</mat-label>
     <input matInput type="email" formControlName="email" autocomplete="email" required>
+    <mat-error>{{ mensagemDeErro('email') }}</mat-error>
   </mat-form-field>
 
   <mat-form-field>
     <mat-label>Telefone</mat-label>
     <input matInput type="tel" formControlName="telefone" autocomplete="tel">
+    <mat-error>{{ mensagemDeErro('telefone') }}</mat-error>
   </mat-form-field>
 
   <mat-form-field>
     <mat-label>Área ou cargo de interesse</mat-label>
     <input matInput formControlName="areaOuCargoDeInteresse">
+    <mat-error>{{ mensagemDeErro('areaOuCargoDeInteresse') }}</mat-error>
   </mat-form-field>
 
   <mat-form-field>
     <mat-label>Resumo profissional</mat-label>
     <textarea matInput formControlName="resumoProfissional" rows="6"></textarea>
+    <mat-error>{{ mensagemDeErro('resumoProfissional') }}</mat-error>
   </mat-form-field>
 
-  @if (falhaAoSalvar()) {
-    <p class="falha" role="alert">Não foi possível salvar o candidato. Tente novamente.</p>
+  @switch (falha()) {
+    @case ('servidorIndisponivel') {
+      <p class="falha" role="alert">
+        Não foi possível falar com o servidor. Verifique se a API está em execução e tente novamente.
+      </p>
+    }
+    @case ('inesperada') {
+      <p class="falha" role="alert">Não foi possível salvar o candidato. Tente novamente.</p>
+    }
   }
 
   <div class="acoes">

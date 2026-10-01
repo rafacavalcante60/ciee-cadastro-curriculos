@@ -1,8 +1,8 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, catchError, throwError } from 'rxjs';
 
-import { Candidato, NovoCandidato } from './candidato.model';
+import { Candidato, FalhaAoCadastrar, NovoCandidato } from './candidato.model';
 
 // Caminho relativo: em desenvolvimento o proxy do Angular repassa /api, sem CORS.
 @Injectable({ providedIn: 'root' })
@@ -10,8 +10,11 @@ export class CandidatoService {
   private readonly http = inject(HttpClient);
   private readonly endereco = '/api/candidatos';
 
+  /** Em caso de erro, o Observable falha com um {@link FalhaAoCadastrar}. */
   criar(novo: NovoCandidato): Observable<Candidato> {
-    return this.http.post<Candidato>(this.endereco, novo);
+    return this.http.post<Candidato>(this.endereco, novo).pipe(
+      catchError((erro: HttpErrorResponse) => throwError(() => traduzirFalha(erro)))
+    );
   }
 
   listar(): Observable<Candidato[]> {
@@ -21,4 +24,26 @@ export class CandidatoService {
   detalhar(id: number): Observable<Candidato> {
     return this.http.get<Candidato>(`${this.endereco}/${id}`);
   }
+}
+
+function traduzirFalha(erro: HttpErrorResponse): FalhaAoCadastrar {
+  if (erro.status === 400 && erro.error?.errors) {
+    const erros: Record<string, string> = {};
+    for (const [campo, mensagens] of Object.entries<string[]>(erro.error.errors)) {
+      erros[campo] = mensagens[0];
+    }
+    return { tipo: 'campos', erros };
+  }
+
+  if (erro.status === 409) {
+    return { tipo: 'campos', erros: { email: erro.error?.detail ?? 'Este e-mail já está cadastrado.' } };
+  }
+
+  // Com a API fora do ar, o proxy de desenvolvimento responde 500 e o Nginx 502:
+  // pelo status não dá para separar API caída de erro interno.
+  if (erro.status === 0 || erro.status >= 500) {
+    return { tipo: 'servidorIndisponivel' };
+  }
+
+  return { tipo: 'inesperada' };
 }

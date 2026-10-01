@@ -1,12 +1,13 @@
 import { Component } from '@angular/core';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { OverlayContainer } from '@angular/cdk/overlay';
+import { ComponentFixture, TestBed, fakeAsync, flush } from '@angular/core/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { Router, provideRouter } from '@angular/router';
 import { Subject } from 'rxjs';
 
 import { CadastroCandidatoComponent } from './cadastro-candidato.component';
 import { CandidatoService } from '../candidato.service';
-import { Candidato, NovoCandidato } from '../candidato.model';
+import { Candidato, FalhaAoCadastrar, NovoCandidato } from '../candidato.model';
 
 @Component({ template: '' })
 class ListagemFalsaComponent {}
@@ -56,6 +57,21 @@ describe('CadastroCandidatoComponent', () => {
     fixture.detectChanges();
   }
 
+  function erroDoCampo(campo: string): string {
+    const campoDoFormulario = tela.querySelector(`[formControlName="${campo}"]`)!.closest('mat-form-field')!;
+    return campoDoFormulario.querySelector('mat-error')?.textContent?.trim() ?? '';
+  }
+
+  function falhar(falha: FalhaAoCadastrar): void {
+    respostaDoServidor.error(falha);
+    fixture.detectChanges();
+  }
+
+  function preencherValido(): void {
+    preencher('nomeCompleto', 'Maria da Silva');
+    preencher('email', 'maria.silva@exemplo.com');
+  }
+
   it('envia os cinco campos, com os opcionais em branco como null', () => {
     preencher('nomeCompleto', 'Maria da Silva');
     preencher('email', 'maria.silva@exemplo.com');
@@ -85,26 +101,156 @@ describe('CadastroCandidatoComponent', () => {
     expect(botaoSalvar().textContent).toContain('Salvando');
   });
 
-  it('depois de salvar, volta para a listagem', async () => {
-    preencher('nomeCompleto', 'Maria da Silva');
-    preencher('email', 'maria.silva@exemplo.com');
+  // fakeAsync em vez de whenStable: o aviso de sucesso fica aberto por um tempo,
+  // e esse timer impediria a zona de estabilizar.
+  it('depois de salvar, volta para a listagem', fakeAsync(() => {
+    preencherValido();
 
     enviar();
     respostaDoServidor.next({ id: 1 } as Candidato);
-    await fixture.whenStable();
+    flush();
 
     expect(TestBed.inject(Router).url).toBe('/candidatos');
-  });
+  }));
 
   it('se o salvamento falhar, libera o botão para nova tentativa e avisa', () => {
-    preencher('nomeCompleto', 'Maria da Silva');
-    preencher('email', 'maria.silva@exemplo.com');
+    preencherValido();
 
     enviar();
-    respostaDoServidor.error(new Error('falha de rede'));
-    fixture.detectChanges();
+    falhar({ tipo: 'inesperada' });
 
     expect(botaoSalvar().disabled).toBeFalse();
     expect(tela.textContent).toContain('Não foi possível salvar');
+  });
+
+  it('confirma o cadastro com uma mensagem visível', fakeAsync(() => {
+    preencherValido();
+
+    enviar();
+    respostaDoServidor.next({ id: 1 } as Candidato);
+    fixture.detectChanges();
+
+    const sobreposicao = TestBed.inject(OverlayContainer).getContainerElement();
+    expect(sobreposicao.textContent).toContain('Candidato cadastrado com sucesso.');
+    flush();
+  }));
+
+  describe('validação', () => {
+    it('com nome e e-mail em branco, não envia e aponta os dois campos', () => {
+      preencher('nomeCompleto', '   ');
+
+      enviar();
+
+      expect(enviados).toEqual([]);
+      expect(erroDoCampo('nomeCompleto')).toBe('Informe o nome completo.');
+      expect(erroDoCampo('email')).toBe('Informe o e-mail.');
+    });
+
+    it('exige ao menos 2 caracteres no nome', () => {
+      preencher('nomeCompleto', 'M');
+      preencher('email', 'maria@exemplo.com');
+
+      enviar();
+
+      expect(enviados).toEqual([]);
+      expect(erroDoCampo('nomeCompleto')).toBe('O nome completo deve ter ao menos 2 caracteres.');
+    });
+
+    for (const email of ['maria', 'maria@', '@exemplo.com', 'maria@exemplo', 'maria silva@exemplo.com']) {
+      it(`recusa o e-mail "${email}"`, () => {
+        preencher('nomeCompleto', 'Maria da Silva');
+        preencher('email', email);
+
+        enviar();
+
+        expect(enviados).toEqual([]);
+        expect(erroDoCampo('email')).toBe('Informe um e-mail válido.');
+      });
+    }
+
+    for (const telefone of ['119876543', '(11) 9876-543', '119876543210', '+55 11 98765-4321', '11 98765-432a']) {
+      it(`recusa o telefone "${telefone}"`, () => {
+        preencherValido();
+        preencher('telefone', telefone);
+
+        enviar();
+
+        expect(enviados).toEqual([]);
+        expect(erroDoCampo('telefone')).toBe('Informe o telefone com DDD, com 10 ou 11 dígitos.');
+      });
+    }
+
+    for (const telefone of ['(11) 98765-4321', '11.3333.4444', '1133334444']) {
+      it(`aceita o telefone "${telefone}"`, () => {
+        preencherValido();
+        preencher('telefone', telefone);
+
+        enviar();
+
+        expect(enviados.length).toBe(1);
+      });
+    }
+
+    it('recusa texto acima do tamanho do campo', () => {
+      preencherValido();
+      preencher('areaOuCargoDeInteresse', 'a'.repeat(121));
+
+      enviar();
+
+      expect(enviados).toEqual([]);
+      expect(erroDoCampo('areaOuCargoDeInteresse')).toBe('Use no máximo 120 caracteres.');
+    });
+  });
+
+  describe('erros devolvidos pela API', () => {
+    it('mostra o e-mail já cadastrado no campo de e-mail, e não em alerta genérico', () => {
+      preencherValido();
+
+      enviar();
+      falhar({ tipo: 'campos', erros: { email: 'Já existe um candidato cadastrado com este e-mail.' } });
+
+      expect(erroDoCampo('email')).toBe('Já existe um candidato cadastrado com este e-mail.');
+      expect(tela.querySelector('[role="alert"]')).toBeNull();
+      expect(botaoSalvar().disabled).toBeFalse();
+    });
+
+    it('mostra cada erro de validação da API junto ao seu campo', () => {
+      preencherValido();
+
+      enviar();
+      falhar({ tipo: 'campos', erros: { nomeCompleto: 'Mensagem da API para o nome.' } });
+
+      expect(erroDoCampo('nomeCompleto')).toBe('Mensagem da API para o nome.');
+    });
+
+    it('apaga o erro da API quando o campo é corrigido', () => {
+      preencherValido();
+      enviar();
+      falhar({ tipo: 'campos', erros: { email: 'Já existe um candidato cadastrado com este e-mail.' } });
+      expect(erroDoCampo('email')).not.toBe('');
+
+      preencher('email', 'outra@exemplo.com');
+      fixture.detectChanges();
+
+      expect(erroDoCampo('email')).toBe('');
+    });
+
+    it('com erro em campo que o formulário não tem, avisa de forma genérica', () => {
+      preencherValido();
+
+      enviar();
+      falhar({ tipo: 'campos', erros: { $: 'JSON inválido.' } });
+
+      expect(tela.querySelector('[role="alert"]')?.textContent).toContain('Não foi possível salvar');
+    });
+
+    it('com o servidor indisponível, explica que não conseguiu falar com ele', () => {
+      preencherValido();
+
+      enviar();
+      falhar({ tipo: 'servidorIndisponivel' });
+
+      expect(tela.querySelector('[role="alert"]')?.textContent).toContain('Não foi possível falar com o servidor');
+    });
   });
 });

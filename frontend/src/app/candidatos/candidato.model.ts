@@ -16,3 +16,8 @@ export interface NovoCandidato {
   areaOuCargoDeInteresse: string | null;
   resumoProfissional: string | null;
 }
+
+export type FalhaAoCadastrar =
+  | { tipo: 'campos'; erros: Record<string, string> }
+  | { tipo: 'servidorIndisponivel' }
+  | { tipo: 'inesperada' };

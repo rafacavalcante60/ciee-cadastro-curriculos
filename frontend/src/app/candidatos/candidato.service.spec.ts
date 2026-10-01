@@ -3,7 +3,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { CandidatoService } from './candidato.service';
-import { Candidato, NovoCandidato } from './candidato.model';
+import { Candidato, FalhaAoCadastrar, NovoCandidato } from './candidato.model';
 
 describe('CandidatoService', () => {
   let servico: CandidatoService;
@@ -47,6 +47,72 @@ describe('CandidatoService', () => {
     requisicao.flush(candidatoGravado, { status: 201, statusText: 'Created' });
 
     expect(recebido).toEqual(candidatoGravado);
+  });
+
+  describe('ao falhar no cadastro', () => {
+    const novo: NovoCandidato = {
+      nomeCompleto: 'Maria da Silva',
+      email: 'maria.silva@exemplo.com',
+      telefone: null,
+      areaOuCargoDeInteresse: null,
+      resumoProfissional: null
+    };
+    let falha: FalhaAoCadastrar | undefined;
+
+    beforeEach(() => {
+      falha = undefined;
+      servico.criar(novo).subscribe({ error: erro => (falha = erro) });
+    });
+
+    it('traduz o 400 em erros por campo, com a primeira mensagem de cada um', () => {
+      http.expectOne('/api/candidatos').flush({
+        title: 'One or more validation errors occurred.',
+        status: 400,
+        errors: {
+          nomeCompleto: ['O nome completo deve ter ao menos 2 caracteres.'],
+          telefone: ['Informe o telefone com DDD, com 10 ou 11 dígitos.', 'Outra mensagem.']
+        }
+      }, { status: 400, statusText: 'Bad Request' });
+
+      expect(falha).toEqual({
+        tipo: 'campos',
+        erros: {
+          nomeCompleto: 'O nome completo deve ter ao menos 2 caracteres.',
+          telefone: 'Informe o telefone com DDD, com 10 ou 11 dígitos.'
+        }
+      });
+    });
+
+    it('traduz o 409 em erro no campo de e-mail, com a mensagem da API', () => {
+      http.expectOne('/api/candidatos').flush({
+        title: 'E-mail já cadastrado',
+        status: 409,
+        detail: 'Já existe um candidato cadastrado com este e-mail.'
+      }, { status: 409, statusText: 'Conflict' });
+
+      expect(falha).toEqual({
+        tipo: 'campos',
+        erros: { email: 'Já existe um candidato cadastrado com este e-mail.' }
+      });
+    });
+
+    it('trata falha de rede como servidor indisponível', () => {
+      http.expectOne('/api/candidatos').error(new ProgressEvent('error'));
+
+      expect(falha).toEqual({ tipo: 'servidorIndisponivel' });
+    });
+
+    it('trata o 500 do proxy de desenvolvimento, com a API fora do ar, como servidor indisponível', () => {
+      http.expectOne('/api/candidatos').flush('', { status: 500, statusText: 'Internal Server Error' });
+
+      expect(falha).toEqual({ tipo: 'servidorIndisponivel' });
+    });
+
+    it('trata outras respostas de erro como falha inesperada', () => {
+      http.expectOne('/api/candidatos').flush('', { status: 404, statusText: 'Not Found' });
+
+      expect(falha).toEqual({ tipo: 'inesperada' });
+    });
   });
 
   it('lista candidatos com GET em /api/candidatos, na ordem devolvida pela API', () => {
