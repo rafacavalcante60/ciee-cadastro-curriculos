@@ -297,14 +297,14 @@ describe('CadastroCandidatoComponent', () => {
       expect(botao.disabled).toBeTrue();
       expect(botao.textContent).toContain('Lendo currículo');
 
-      extrair({ nomeCompleto: null, email: null, telefone: null });
+      extrair({ nomeCompleto: null, email: null, telefone: null, aviso: null });
 
       expect(botao.disabled).toBeFalse();
     });
 
     it('preenche os campos identificados, que continuam editáveis, e o cadastro conclui', () => {
       escolherArquivo(curriculo);
-      extrair({ nomeCompleto: 'Maria Aparecida da Silva', email: 'maria.silva@exemplo.com', telefone: '11987654321' });
+      extrair({ nomeCompleto: 'Maria Aparecida da Silva', email: 'maria.silva@exemplo.com', telefone: '11987654321', aviso: null });
 
       expect(valorDoCampo('nomeCompleto')).toBe('Maria Aparecida da Silva');
       expect(valorDoCampo('email')).toBe('maria.silva@exemplo.com');
@@ -327,9 +327,35 @@ describe('CadastroCandidatoComponent', () => {
       preencher('telefone', '(21) 3333-4444');
 
       escolherArquivo(curriculo);
-      extrair({ nomeCompleto: 'Maria Aparecida da Silva', email: 'maria.silva@exemplo.com', telefone: null });
+      extrair({ nomeCompleto: 'Maria Aparecida da Silva', email: 'maria.silva@exemplo.com', telefone: null, aviso: null });
 
       expect(valorDoCampo('telefone')).toBe('');
+    });
+
+    it('com aviso da extração, mostra o aviso como informação, sem alerta de erro, e o cadastro manual conclui', () => {
+      const aviso = 'O PDF não tem texto selecionável, como acontece com currículos digitalizados. Preencha os campos à mão.';
+
+      escolherArquivo(curriculo);
+      extrair({ nomeCompleto: null, email: null, telefone: null, aviso });
+
+      expect(tela.querySelector('.extracao [role="status"]')?.textContent).toContain(aviso);
+      expect(tela.querySelector('.extracao [role="alert"]')).toBeNull();
+      expect(valorDoCampo('nomeCompleto')).toBe('');
+
+      preencherValido();
+      enviar();
+      expect(enviados.length).toBe(1);
+    });
+
+    it('apaga o aviso anterior ao ler outro currículo', () => {
+      escolherArquivo(curriculo);
+      extrair({ nomeCompleto: null, email: null, telefone: null, aviso: 'O PDF é protegido por senha e não pôde ser lido. Preencha os campos à mão.' });
+
+      respostaDaExtracao = new Subject<CamposExtraidos>();
+      escolherArquivo(curriculo);
+      extrair({ nomeCompleto: 'Maria Aparecida da Silva', email: 'maria.silva@exemplo.com', telefone: null, aviso: null });
+
+      expect(tela.querySelector('.extracao [role="status"]')).toBeNull();
     });
 
     it('com arquivo recusado pela API, mostra o motivo e mantém o formulário utilizável', () => {

@@ -45,6 +45,7 @@ export class CadastroCandidatoComponent {
   readonly falha = signal<Exclude<FalhaAoCadastrar['tipo'], 'campos'> | null>(null);
   readonly extraindo = signal(false);
   readonly falhaNaExtracao = signal<string | null>(null);
+  readonly avisoDaExtracao = signal<string | null>(null);
 
   extrairCurriculo(seletor: HTMLInputElement): void {
     const arquivo = seletor.files?.[0];
@@ -55,6 +56,7 @@ export class CadastroCandidatoComponent {
     }
 
     this.falhaNaExtracao.set(null);
+    this.avisoDaExtracao.set(null);
     if (arquivo.size > limiteDoCurriculoEmBytes) {
       this.falhaNaExtracao.set('O arquivo excede o limite de 5 MB.');
       return;
@@ -63,11 +65,14 @@ export class CadastroCandidatoComponent {
     this.extraindo.set(true);
     this.servico.extrairCurriculo(arquivo).subscribe({
       // Campo não identificado volta vazio, para não sobrar o valor de outro currículo.
-      next: campos => this.formulario.patchValue({
-        nomeCompleto: campos.nomeCompleto ?? '',
-        email: campos.email ?? '',
-        telefone: campos.telefone ?? ''
-      }),
+      next: campos => {
+        this.formulario.patchValue({
+          nomeCompleto: campos.nomeCompleto ?? '',
+          email: campos.email ?? '',
+          telefone: campos.telefone ?? ''
+        });
+        this.avisoDaExtracao.set(campos.aviso);
+      },
       error: (falha: FalhaNaExtracao) => {
         this.extraindo.set(false);
         this.falhaNaExtracao.set(mensagemDaFalhaNaExtracao(falha));
