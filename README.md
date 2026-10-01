@@ -43,6 +43,11 @@ por fim o Nginx, que serve o frontend e repassa `/api/` para a API. Subir de
 novo sobre os mesmos dados não falha, porque o script é idempotente. Para
 começar do zero: `docker compose down -v`.
 
+A primeira subida baixa cerca de 1,3 GB, na maior parte a imagem do SQL Server,
+e leva alguns minutos; as seguintes usam o cache e sobem em segundos. Em Mac com
+chip Apple, a imagem do SQL Server roda por emulação: deixe ligada a opção "Use
+Rosetta for x86_64/amd64 emulation" do Docker Desktop.
+
 ### Com os SDKs (desenvolvimento e testes)
 
 Pré-requisitos:
