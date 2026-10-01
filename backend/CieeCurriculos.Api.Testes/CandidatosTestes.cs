@@ -111,7 +111,8 @@ public class CandidatosTestes : IAsyncLifetime
     [Fact]
     public async Task Detalhes_de_candidato_existente_devolvem_os_dados_gravados()
     {
-        var resumoLongo = string.Concat(Enumerable.Repeat("Experiência com atendimento e rotinas administrativas. ", 30));
+        var paragrafo = string.Concat(Enumerable.Repeat("Experiência com atendimento e rotinas administrativas. ", 15));
+        var resumoLongo = $"{paragrafo}\n\n{paragrafo}";
         var resposta = await _cliente.PostAsJsonAsync("/api/candidatos", new
         {
             nomeCompleto = "Maria da Silva",
