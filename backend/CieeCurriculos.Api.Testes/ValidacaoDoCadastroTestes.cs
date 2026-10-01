@@ -29,6 +29,7 @@ public class ValidacaoDoCadastroTestes : IAsyncLifetime
     [InlineData("", "Informe o nome completo.")]
     [InlineData("   ", "Informe o nome completo.")]
     [InlineData("M", "O nome completo deve ter ao menos 2 caracteres.")]
+    [InlineData(" M ", "O nome completo deve ter ao menos 2 caracteres.")]
     public async Task Nome_ausente_ou_curto_devolve_400_no_campo_do_nome(string? nomeCompleto, string mensagem)
     {
         var resposta = await _cliente.PostAsJsonAsync("/api/candidatos", new { nomeCompleto, email = "maria@exemplo.com" });
@@ -36,6 +37,15 @@ public class ValidacaoDoCadastroTestes : IAsyncLifetime
         var erros = await ErrosDeValidacaoAsync(resposta);
         Assert.Equal(new[] { "nomeCompleto" }, erros.Keys);
         Assert.Equal(new[] { mensagem }, erros["nomeCompleto"]);
+    }
+
+    [Fact]
+    public async Task Nome_e_gravado_sem_espacos_nas_pontas()
+    {
+        var resposta = await _cliente.PostAsJsonAsync("/api/candidatos", new { nomeCompleto = "  Maria da Silva ", email = "maria@exemplo.com" });
+
+        var criado = await resposta.Content.ReadFromJsonAsync<CandidatoResposta>();
+        Assert.Equal("Maria da Silva", criado!.NomeCompleto);
     }
 
     [Theory]

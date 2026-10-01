@@ -16,7 +16,7 @@ public record NovoCandidato
     [MaxLength(256, ErrorMessage = "Use no máximo {1} caracteres.")]
     public string Email { get; init; } = string.Empty;
 
-    [Telefone(ErrorMessage = "Informe o telefone com DDD, com 10 ou 11 dígitos.")]
+    [FormatoDeTelefone(ErrorMessage = "Informe o telefone com DDD, com 10 ou 11 dígitos.")]
     public string? Telefone { get; init; }
 
     [MaxLength(120, ErrorMessage = "Use no máximo {1} caracteres.")]
@@ -28,7 +28,7 @@ public record NovoCandidato
     // E-mail normalizado aqui em vez de depender da collation do banco.
     public Candidato ParaCandidato(DateTime dataCadastro) => new()
     {
-        NomeCompleto = NomeCompleto,
+        NomeCompleto = NomeCompleto.Trim(),
         Email = Email.Trim().ToLowerInvariant(),
         Telefone = NumeroDeTelefone.Normalizar(Telefone),
         AreaOuCargoDeInteresse = AreaOuCargoDeInteresse,

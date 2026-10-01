@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -31,7 +31,7 @@ export class CadastroCandidatoComponent {
   private readonly avisos = inject(MatSnackBar);
 
   readonly formulario = inject(FormBuilder).nonNullable.group({
-    nomeCompleto: ['', [obrigatorio, Validators.minLength(2), Validators.maxLength(200)]],
+    nomeCompleto: ['', [obrigatorio, minimoDeCaracteres(2), Validators.maxLength(200)]],
     email: ['', [obrigatorio, Validators.pattern(/^\s*[^\s@]+@[^\s@]+\.[^\s@]+\s*$/), Validators.maxLength(256)]],
     telefone: ['', telefone],
     areaOuCargoDeInteresse: ['', Validators.maxLength(120)],
@@ -39,7 +39,7 @@ export class CadastroCandidatoComponent {
   });
 
   readonly salvando = signal(false);
-  readonly falha = signal<'servidorIndisponivel' | 'inesperada' | null>(null);
+  readonly falha = signal<Exclude<FalhaAoCadastrar['tipo'], 'campos'> | null>(null);
 
   salvar(): void {
     // Segundo clique ou Enter durante o salvamento não gera um segundo cadastro.
@@ -85,7 +85,7 @@ export class CadastroCandidatoComponent {
     if (erros['obrigatorio']) {
       return campo === 'email' ? 'Informe o e-mail.' : 'Informe o nome completo.';
     }
-    if (erros['minlength']) {
+    if (erros['minimo']) {
       return 'O nome completo deve ter ao menos 2 caracteres.';
     }
     if (erros['maxlength']) {
@@ -126,6 +126,14 @@ export class CadastroCandidatoComponent {
 // Validators.required aceita só espaços; a API não.
 function obrigatorio(controle: AbstractControl<string>): ValidationErrors | null {
   return controle.value.trim() === '' ? { obrigatorio: true } : null;
+}
+
+// Validators.minLength conta os espaços das pontas; a API grava o nome aparado.
+function minimoDeCaracteres(minimo: number): ValidatorFn {
+  return controle => {
+    const texto = controle.value.trim();
+    return texto !== '' && texto.length < minimo ? { minimo: true } : null;
+  };
 }
 
 // Mesma normalização da API: descarta máscara e separadores, o resto tem de ser dígito.

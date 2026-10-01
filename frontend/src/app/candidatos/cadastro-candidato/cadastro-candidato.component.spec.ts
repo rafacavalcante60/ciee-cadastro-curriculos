@@ -146,8 +146,8 @@ describe('CadastroCandidatoComponent', () => {
       expect(erroDoCampo('email')).toBe('Informe o e-mail.');
     });
 
-    it('exige ao menos 2 caracteres no nome', () => {
-      preencher('nomeCompleto', 'M');
+    it('exige ao menos 2 caracteres no nome, sem contar os espaços das pontas', () => {
+      preencher('nomeCompleto', ' M ');
       preencher('email', 'maria@exemplo.com');
 
       enviar();

@@ -10,7 +10,7 @@ export class CandidatoService {
   private readonly http = inject(HttpClient);
   private readonly endereco = '/api/candidatos';
 
-  /** Em caso de erro, o Observable falha com um {@link FalhaAoCadastrar}. */
+  // Em caso de erro, o Observable falha com um FalhaAoCadastrar.
   criar(novo: NovoCandidato): Observable<Candidato> {
     return this.http.post<Candidato>(this.endereco, novo).pipe(
       catchError((erro: HttpErrorResponse) => throwError(() => traduzirFalha(erro)))
@@ -36,7 +36,7 @@ function traduzirFalha(erro: HttpErrorResponse): FalhaAoCadastrar {
   }
 
   if (erro.status === 409) {
-    return { tipo: 'campos', erros: { email: erro.error?.detail ?? 'Este e-mail já está cadastrado.' } };
+    return { tipo: 'campos', erros: { email: erro.error?.detail ?? 'Já existe um candidato cadastrado com este e-mail.' } };
   }
 
   // Com a API fora do ar, o proxy de desenvolvimento responde 500 e o Nginx 502:
