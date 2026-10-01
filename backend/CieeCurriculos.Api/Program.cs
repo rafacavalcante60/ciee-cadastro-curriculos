@@ -1,10 +1,14 @@
+using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using CieeCurriculos.Api.Dados;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
 var construtor = WebApplication.CreateBuilder(args);
 
-construtor.Services.AddControllers();
+// Chaves dos erros de validação com o nome do campo no JSON (nomeCompleto), não o
+// da propriedade C# (NomeCompleto): o frontend associa cada erro ao seu campo.
+construtor.Services.AddControllers(opcoes =>
+    opcoes.ModelMetadataDetailsProviders.Add(new SystemTextJsonValidationMetadataProvider()));
 construtor.Services.AddSingleton(TimeProvider.System);
 construtor.Services.AddEndpointsApiExplorer();
 construtor.Services.AddSwaggerGen(opcoes =>
