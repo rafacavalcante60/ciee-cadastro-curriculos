@@ -104,7 +104,7 @@ Ticket: [#3](https://github.com/rafacavalcante60/ciee-cadastro-curriculos/issues
 Primeira fatia que passa por todas as camadas: entidade `Candidato`, migration
 inicial com índice único em `Email`, `schema.sql` exportado, `POST` e
 `GET /api/candidatos`, formulário e listagem no Angular, e testes nos dois
-lados.
+lados. **Tempo:** cerca de 1 hora, incluindo revisão e conferência manual.
 
 **Onde a IA ajudou:** implementação em TDD a partir dos critérios do ticket,
 testes no seam HTTP e no `CandidatoService`, conferência do fluxo no navegador
