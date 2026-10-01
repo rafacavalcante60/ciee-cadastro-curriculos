@@ -1,0 +1,14 @@
+.cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.vazio {
+  padding: 32px 0;
+  text-align: center;
+}
+
+.falha {
+  color: var(--mat-sys-error);
+}
