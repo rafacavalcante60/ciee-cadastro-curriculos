@@ -24,24 +24,41 @@ PDF do qual a aplicação tenta extrair nome, e-mail e telefone.
 | Testes | xUnit, Testcontainers, `WebApplicationFactory` | — |
 | | Karma, Jasmine, Chrome via puppeteer | — |
 
-## Pré-requisitos
+## Como rodar
+
+### Com Docker (recomendado)
+
+Só é preciso Docker com Docker Compose; nada de .NET, Node ou `dotnet-ef`.
+
+```bash
+git clone https://github.com/rafacavalcante60/ciee-cadastro-curriculos.git && cd ciee-cadastro-curriculos
+cp .env.example .env
+docker compose up --build
+```
+
+A aplicação abre em `http://localhost:8080` (a porta muda com `FRONTEND_PORTA`
+no `.env`). A subida segue uma ordem: o SQL Server fica saudável, um serviço de
+migração cria o banco e aplica o `backend/schema.sql` e termina, a API sobe, e
+por fim o Nginx, que serve o frontend e repassa `/api/` para a API. Subir de
+novo sobre os mesmos dados não falha, porque o script é idempotente. Para
+começar do zero: `docker compose down -v`.
+
+### Com os SDKs (desenvolvimento e testes)
+
+Pré-requisitos:
 
 - .NET SDK 8
 - Node.js 22
 - Docker com Docker Compose
 - Ferramenta de migrations: `dotnet tool install --global dotnet-ef --version 8.*`
 
-## Configuração e execução
-
-Quatro passos a partir de um clone novo:
-
 ```bash
 # 1. Configure as credenciais locais
 #    O .env fica fora do repositório; ajuste a senha se quiser.
 cp .env.example .env
 
-# 2. Suba o SQL Server
-docker compose up -d
+# 2. Suba só o SQL Server
+docker compose up -d banco
 
 # 3. Crie a estrutura do banco
 cd backend
@@ -53,17 +70,12 @@ dotnet run --project CieeCurriculos.Api     # http://localhost:5080
 cd ../frontend && npm install && npm start  # http://localhost:4200
 ```
 
-Sem a ferramenta `dotnet-ef`, o passo 3 pode ser feito com o `backend/schema.sql`,
-exportado da migration. O script é idempotente e é aplicado com o `sqlcmd` que
-já vem na imagem do SQL Server (rode da raiz do repositório, com a senha do
-`.env` exportada em `MSSQL_SA_PASSWORD`):
+Sem a ferramenta `dotnet-ef`, o passo 3 pode ser feito pelo mesmo serviço de
+migração do caminho Docker, que aplica o `backend/schema.sql` com o `sqlcmd` da
+imagem do SQL Server:
 
 ```bash
-docker compose cp backend/schema.sql banco:/tmp/schema.sql
-docker compose exec banco /opt/mssql-tools18/bin/sqlcmd -C -b -U sa -P "$MSSQL_SA_PASSWORD" \
-  -Q "IF DB_ID('CieeCurriculos') IS NULL CREATE DATABASE CieeCurriculos"
-docker compose exec banco /opt/mssql-tools18/bin/sqlcmd -C -b -U sa -P "$MSSQL_SA_PASSWORD" \
-  -d CieeCurriculos -i /tmp/schema.sql
+docker compose run --rm migracao
 ```
 
 A API fica em `http://localhost:5080`, com Swagger em `/swagger`. O frontend
@@ -127,8 +139,8 @@ sudo apt-get install -y libnss3 libasound2t64
 ## Estrutura
 
 ```
-backend/    API em ASP.NET Core e projeto de testes
-frontend/   Aplicação Angular
+backend/    API em ASP.NET Core, projeto de testes e schema.sql
+frontend/   Aplicação Angular e configuração do Nginx
 GLOSSARY.md Vocabulário do domínio
 ```
 
