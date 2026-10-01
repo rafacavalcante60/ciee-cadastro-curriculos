@@ -90,6 +90,41 @@ como tal, e 503 quando o servidor não responde. Além dos testes, verificação
 manual com a aplicação rodando contra o container do compose, conferindo a
 resposta de `/api/saude` e o documento do Swagger.
 
+**Revisão da fatia.** Submeti a fatia a uma revisão em dois eixos independentes,
+um conferindo aderência aos padrões do projeto e outro conferindo fidelidade ao
+ticket. Achados que viraram correção:
+
+- **Senha de desenvolvimento no README.** O passo de criação do schema trazia a
+  senha real do `.env.example`, oito linhas depois de o próprio README afirmar
+  que nenhuma credencial é versionada. Trocada por `SUA_SENHA`. A senha
+  permanece apenas no `.env.example`, que é um arquivo de exemplo por
+  definição — essa parte eu mantive de propósito, porque o ticket pede um
+  exemplo que satisfaça a política de complexidade do SQL Server, e um
+  placeholder ali faria o container falhar num clone novo.
+- **Falha 500 em connection string malformada.** O método que verifica o
+  servidor capturava apenas `SqlException`. Sondando os casos reais, descobri
+  que configuração ausente, vazia ou com o placeholder respondem 503
+  corretamente, mas uma string **malformada** estoura `ArgumentException` na
+  montagem da conexão, antes de qualquer tentativa de rede, e vazava como 500 —
+  justamente o erro de configuração que o endpoint existe para diagnosticar.
+  Corrigido, com teste de regressão parametrizado nos três casos.
+- **Angular Material sem o provedor de animações.** O `ng add` foi executado com
+  animações habilitadas, mas não registrou `provideAnimationsAsync()` na
+  configuração da aplicação. Teria falhado no primeiro componente de Material da
+  fatia seguinte. Adicionado junto com `provideHttpClient()`.
+- **README citava `docs/adr/`, que ainda não existe.** Linha removida; os ADRs
+  entram na fatia de documentação.
+- **Promessa a mais no README.** O passo de criação do schema não tem efeito
+  enquanto não houver a primeira migration, que pertence à fatia de cadastro.
+  O texto agora diz isso, em vez de deixar quem avalia achando que algo quebrou.
+- **Comentários em inglês herdados do scaffold** do Karma, e o jargão "seam" sem
+  tradução. Ajustados: o projeto usa português de forma consistente.
+
+Um achado eu rejeitei: a sugestão de transformar os campos de situação da
+resposta de saúde em tipo próprio, em vez de texto. São quatro valores num
+endpoint de diagnóstico; um enum com conversor de serialização seria mais
+maquinaria do que o problema pede.
+
 **Tempo dedicado.** <!-- a preencher -->
 
 ## Limitações conhecidas
