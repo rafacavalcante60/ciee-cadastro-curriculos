@@ -343,6 +343,118 @@ do formulário no navegador; revisão da fatia.
   `(11) 98765-4321` gravado como `11987654321`; API desligada mostrando a
   mensagem de servidor indisponível.
 
+## Fatia 5: importação de currículo em PDF
+
+Ticket: [#6](https://github.com/rafacavalcante60/ciee-cadastro-curriculos/issues/6).
+
+`POST /api/curriculos/extracao` recebe um PDF e devolve nome, e-mail e
+telefone identificados, com `null` no que não encontrou. Na tela de cadastro,
+um botão acima do formulário envia o arquivo e preenche os campos, que
+continuam editáveis. O salvamento segue sendo o mesmo `POST` de JSON. Esta
+fatia cobre o caminho feliz e a recusa de arquivo inválido; PDF sem texto,
+corrompido ou protegido fica para a #7.
+
+**Onde a IA ajudou:** heurísticas de extração em TDD, um ciclo por regra;
+gerador das amostras com QuestPDF; testes no seam HTTP, no formulário e no
+`CandidatoService`; conferência no navegador; revisão da fatia.
+
+**Decisões desta fatia:**
+
+- **Extração como função de texto para campos.** `ExtracaoDeCampos.Extrair`
+  recebe uma `string` e devolve `CamposExtraidos`, sem saber de HTTP nem de
+  PDF. É uma função estática, não uma interface C# registrada em DI: há uma
+  única implementação, e uma interface seria uma camada sem uso. Os 41 casos
+  de unidade rodam em milissegundos, sem gerar um PDF por caso.
+- **Leitura pela ordem do conteúdo.** `page.Text` do PdfPig junta a página
+  inteira sem quebra de linha (testei: o e-mail grudava na palavra anterior e
+  nenhum nome era encontrado). `ContentOrderTextExtractor` devolve uma linha
+  por linha do documento, que é como a heurística do nome trabalha.
+- **CPF não vira telefone.** Números logo depois dos rótulos CPF, CNPJ, CEP e
+  RG são apagados antes de procurar o telefone. O `+55` fica fora do grupo que
+  vira o número, então o resultado tem os 10 ou 11 dígitos que a validação do
+  cadastro aceita.
+- **Nome:** rótulo `Nome:` ou `Nome completo:` primeiro; senão, a primeira
+  linha só com palavras capitalizadas (duas ou mais, fora as partículas) que
+  não tenha termos de título como "Currículo". Linhas de e-mail e telefone
+  caem fora por terem caracteres que não são letras. Nome todo em maiúsculas
+  ganha iniciais maiúsculas, com `da`, `de`, `do`, `das`, `dos` e `e` em
+  minúsculas.
+- **Tipo do arquivo pela assinatura `%PDF-`**, não pela extensão nem pelo
+  content-type, que o cliente declara como quiser.
+- **Binário só em memória.** Por padrão o ASP.NET grava em arquivo temporário
+  todo upload acima de 64 KB. O endpoint eleva esse limiar com
+  `[RequestFormLimits(MemoryBufferThreshold = ...)]`. O limite de 5 MB é
+  conferido no controller, porque o `MultipartBodyLengthLimit` recusaria com o
+  erro genérico de validação, sem dizer que o problema é o tamanho.
+- **Limite de 5 MB também no formulário**, como as demais regras da API: o
+  arquivo grande é recusado antes de subir.
+- **Campo não identificado apaga o valor anterior.** Ao enviar um segundo
+  currículo, um campo que ele não traz ficaria com o dado do primeiro
+  candidato. Apagar é o que o ticket pede ("fica vazio") e evita misturar
+  duas pessoas.
+- **Amostras commitadas, geradas por código.** O gerador fica em
+  `samples/gerador/`, fora da solução, para que `dotnet test` não baixe o
+  QuestPDF. Os PDFs saem iguais byte a byte ao rodar de novo (conferido por
+  hash), porque as datas dos metadados são fixas. O teste percorre os PDFs da
+  pasta e falha se algum não estiver em `esperado.json`.
+
+**O que corrigi ou adaptei:**
+
+- O primeiro comentário do `LeitorDePdf` dizia que a leitura por posição
+  juntava as duas colunas numa linha. Era suposição. Troquei temporariamente
+  para `page.Text` para conferir, e o problema real era outro (falta de
+  quebras de linha). Reescrevi o comentário com o que observei.
+- Confirmei na prática que o arquivo não vai para o disco: com
+  `ASPNETCORE_TEMP` apontando para uma pasta sem permissão de escrita, o
+  upload falhou ao tentar criar `ASPNETCORE_*.tmp` sem o atributo e passou com
+  ele. Não virou teste automático, porque essa pasta é lida uma vez por
+  processo e o teste dependeria da ordem de execução.
+- Um script editou o `.csproj` de testes e trocou as quebras de linha CRLF do
+  arquivo por LF, inflando o diff. Refiz a edição preservando o original.
+
+**Achados da revisão:**
+
+- Nome com hífen ou apóstrofo em maiúsculas virava "Maria-josé" e "D'ávila".
+  Agora hífen e apóstrofo também abrem inicial, com teste.
+- O padrão do rótulo de documento aceitava até 10 caracteres quaisquer antes
+  do número, e em "RG — Tel: 11 98765-4321" apagava o DDD do telefone. Agora
+  só aceita separadores e `nº`, com teste.
+- "Importar" não está no glossário: o método e a classe do formulário
+  passaram a usar "extração".
+- O teste que conferia se todo PDF tinha resultado declarado olhava arquivos,
+  não comportamento. Foi incorporado ao teste das amostras, que agora percorre
+  a pasta.
+- A tradução de 5xx e falha de rede estava copiada no `CandidatoService`, sem
+  o comentário que explica o 500 do proxy. Extraída para `falhaGenerica`.
+- Comentários que repetiam o nome do teste ou do arquivo, removidos.
+- **Rejeitado:** concentrar o limite de 5 MB num lugar só. Ele aparece na API
+  e no formulário porque o projeto repete as regras da API no frontend de
+  propósito, como nas validações da fatia 4.
+- **Rejeitado:** interface C# para o serviço de extração (motivo acima).
+- **Fica para a #7:** um cabeçalho como "DADOS PESSOAIS", sem rótulo e antes
+  do nome, é sugerido como nome. Bate com a regra pedida, mas entra nas
+  limitações documentadas.
+
+**Como verifiquei:**
+
+- 41 testes de unidade da extração: cada formato de telefone, `+55`, CPF,
+  CNPJ, CEP e RG, nome por posição e por rótulo, maiúsculas, e as combinações
+  de campo presente e ausente. Cada regra falhou antes de ser implementada.
+- Testes no seam HTTP: PDF completo devolve os três campos; as quatro
+  amostras batem com `esperado.json`; a extração não cria candidato e os
+  campos devolvidos concluem o cadastro; arquivo com extensão `.pdf` que não é
+  PDF, arquivos de 5 MB + 1 byte e de 12 MB, e requisição sem arquivo
+  devolvem 400.
+- Testes do formulário (campos preenchidos e editáveis, carregamento, campo
+  não identificado vazio, erro da API, arquivo grande) e do `CandidatoService`.
+- À mão, com `curl`: as cinco amostras, arquivos de 6 MB e de 40 MB, e o
+  Swagger mostrando o campo de upload. O de 40 MB passa do teto do Kestrel
+  (30 MB) e volta 400 com a mensagem genérica do framework, em inglês.
+- No navegador: o botão mostra "Lendo currículo…" e fica desabilitado durante
+  o envio; o formulário é preenchido; `nao-e-pdf.pdf` e um arquivo de 6 MB
+  mostram o motivo da recusa; com o nome editado, o cadastro salvou e
+  apareceu na listagem.
+
 ## Limitações conhecidas
 
 <!-- Consolidado na fatia de documentação, após a importação de PDF estar pronta. -->
