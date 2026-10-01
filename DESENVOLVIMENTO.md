@@ -10,6 +10,11 @@ em todo o desafio. Primeiro o modelo me questionou sobre o desenho (27
 perguntas em quatro rodadas); depois escrevi a especificação e o recorte em
 tickets, e só então implementei, um ticket por vez. Não pedi o projeto pronto.
 
+A configuração do assistente (o `CLAUDE.md` com as regras do projeto e as
+instruções em `docs/agents/`) ficou fora do repositório, no `.gitignore`: é
+ambiente meu, não do projeto, e quem avalia não precisa dela. O uso de IA não
+fica escondido por isso; está descrito aqui.
+
 Toda fatia passa por duas revisões antes de fechar, uma contra os padrões do
 projeto e outra contra o ticket. A verificação combina testes de integração
 contra SQL Server real e conferência manual com a aplicação rodando.
@@ -22,6 +27,21 @@ contra SQL Server real e conferência manual com a aplicação rodando.
 - **Telefone.** O modelo recomendou texto livre, para um telefone estranho
   vindo do PDF não bloquear o cadastro. Preferi dez ou onze dígitos após
   normalizar, com o campo opcional.
+
+## Como usei a IA
+
+- **Desenho:** pedi ao modelo que me questionasse sobre o plano antes de
+  escrever código; das respostas saíram a especificação e os tickets.
+- **Implementação:** um ticket por vez. O pedido desta última fatia foi
+  `/implement issue #8`, um comando do Claude Code que lê o ticket, implementa
+  com testes primeiro onde cabe, roda as duas revisões e faz os commits.
+- **Revisão:** as duas revisões de cada fatia são agentes separados, um contra
+  os padrões do projeto e outro contra o ticket. Os achados que rejeitei estão
+  em cada fatia.
+- **Correções de rumo que pedi:** parar de atualizar o README a cada fatia,
+  porque ninguém o lê no meio do caminho; encurtar este registro, que chegou a
+  464 linhas depois de cinco fatias; não adicionar lint, que nenhum ticket
+  pedia; e apagar o glossário.
 
 ## Organização
 
@@ -37,8 +57,11 @@ Também escrevi um glossário do domínio e depois o apaguei: com uma entidade
 só, os termos se explicam, e as decisões que ele guardava já estão no README
 e neste registro.
 
-Commits pequenos, em português, no padrão Conventional Commits, nenhum com
-build quebrado ou teste vermelho.
+Commits pequenos, em português, no padrão Conventional Commits. Um trecho de
+onze commits da fatia 1, de `d607a30` a `078ad87`, não compila o frontend: o
+provedor de animações foi registrado sem instalar `@angular/animations`, e só
+`3ab3c40` corrige. Conferi fazendo o build em `d607a30`. Não reescrevi o
+histórico, que já estava publicado.
 
 ## Fatia 1: esqueleto e conexão com o banco
 
@@ -233,6 +256,93 @@ SQL Server para o caminho com SDKs e para os testes.
   schema) e o Nginx guardar o IP da API até reiniciar (só afeta recriar a API
   sozinha, fora do fluxo pedido).
 
+## Fatia 8: documentação e integração contínua
+
+[#8](https://github.com/rafacavalcante60/ciee-cadastro-curriculos/issues/8) ·
+tempo a registrar.
+
+README revisto inteiro, workflow de CI, este registro consolidado e a
+aplicação conferida num clone limpo pelos dois caminhos.
+
+- **README:** saiu a faixa de estado atual; entraram versões de todas as
+  ferramentas, as amostras com o que cada uma exercita, as decisões técnicas e o
+  fora de escopo com o motivo de cada item. O README do `frontend/`, gerado pelo
+  Angular CLI em inglês, foi apagado.
+- **Glossário e ADRs não foram feitos**, embora o ticket peça. As três decisões
+  que os ADRs guardariam (PdfPig, heurística, projeto único) estão em poucas
+  linhas na seção "Decisões técnicas" do README.
+- **CI com Testcontainers**, e não com um SQL Server declarado como serviço do
+  workflow: o runner do GitHub já tem Docker, então o teste roda igual na
+  máquina e no CI, sem configuração própria.
+- **Clone limpo** do GitHub nos dois caminhos: `docker compose up --build` com
+  volume novo, e o caminho com SDKs (`dotnet ef database update`, `dotnet run`,
+  `npm start`). Nos dois, um roteiro no Chrome headless percorreu os quatro
+  fluxos: erro de validação, cadastro manual, e-mail repetido, PDF que preenche
+  o formulário, PDF digitalizado que mantém o digitado, listagem do mais
+  recente para o mais antigo, detalhes e id inexistente.
+- **Achado ao conferir:** o telefone aparece nos detalhes só com dígitos
+  (`11912345678`). Não corrigi; ficou nas melhorias.
+- **Erro no próprio registro:** a seção de organização dizia que nenhum commit
+  tinha build quebrado, o que era falso. Corrigido, com os commits.
+
+## Como verifiquei
+
+Medido em 1º de outubro de 2026, no commit da fatia 8, no WSL2 (Linux sobre Windows).
+
+| Projeto | Testes |
+|---|---|
+| Backend (xUnit: extração por unidade, API por integração com SQL Server real) | 106 |
+| Frontend (Karma e Jasmine: formulário e serviço HTTP) | 47 |
+
+Extração das amostras de `samples/`, conferida contra o `esperado.json`:
+
+| Resultado | Amostras |
+|---|---|
+| Nome, e-mail e telefone certos, em currículo legível | 4 de 4 (no sem telefone, o campo voltou vazio, como devia) |
+| Nenhum campo e o aviso certo, em PDF ilegível (digitalizado, senha, corrompido) | 3 de 3 |
+| Arquivo que não é PDF recusado com 400 | 1 de 1 |
+
+Os acertos não medem a qualidade da extração em currículos reais: as amostras
+foram escritas junto com as heurísticas, então servem para pegar regressão. Os
+erros conhecidos estão nas limitações abaixo.
+
+Tempo de resposta de `POST /api/curriculos/extracao`, medido com `curl` direto
+na API em execução local (`dotnet run`), mediana de 20 chamadas depois de uma de
+aquecimento:
+
+| Amostra | Mediana | Máximo |
+|---|---|---|
+| `curriculo-completo.pdf` | 10,2 ms | 29,0 ms |
+| `curriculo-duas-colunas.pdf` | 7,3 ms | 11,1 ms |
+| `curriculo-sem-telefone.pdf` | 6,6 ms | 11,6 ms |
+| `curriculo-nome-com-rotulo.pdf` | 6,3 ms | 8,1 ms |
+| `curriculo-protegido-por-senha.pdf` | 5,0 ms | 23,8 ms |
+| `curriculo-digitalizado.pdf` | 2,8 ms | 5,3 ms |
+| `curriculo-corrompido.pdf` | 2,5 ms | 4,3 ms |
+
+Além dos testes, cada fatia foi conferida à mão com a aplicação rodando, e os
+quatro fluxos foram percorridos no navegador ao fim da fatia 8.
+
+## Erros da IA que precisei corrigir
+
+Os detalhes estão em cada fatia; aqui, juntos:
+
+- Registrou o provedor de animações sem instalar o pacote, quebrando o build
+  por onze commits (fatia 1).
+- Escreveu testes da tela de detalhes que a especificação excluía (fatia 3).
+- Afirmou num comentário que o PdfPig embaralhava colunas, sem ter testado; o
+  problema real era a falta de quebras de linha (fatia 5).
+- Implementou um aviso único onde a especificação pedia uma lista, e as duas
+  revisões automáticas não perceberam (fatia 6).
+- Pôs uma linha de coautoria no commit `e72021c`, contra a regra que eu tinha
+  dado de não fazer isso.
+- Afirmou neste registro que nenhum commit tinha build quebrado (fatia 8).
+
+## Tempo dedicado
+
+Cerca de 6 horas e 10 minutos nas fatias 1 a 7, contando o questionamento
+inicial, a especificação e os tickets; o tempo da fatia 8 está na seção dela.
+
 ## Limitações conhecidas
 
 | Limitação | Efeito para quem usa |
@@ -250,4 +360,13 @@ cadastro só é salvo depois que a pessoa do recrutamento confere.
 
 ## Melhorias com mais tempo
 
-<!-- Consolidado na fatia de documentação. -->
+- **OCR para PDF digitalizado**, com Tesseract, que hoje só gera um aviso.
+- **Ler a posição das palavras no PDF**, que o PdfPig fornece, para separar
+  colunas e achar o nome pelo tamanho da fonte em vez da primeira linha
+  capitalizada.
+- **Ler área de interesse e resumo** pelas seções "Objetivo" e "Resumo".
+- **Telefone formatado na exibição**, como `(11) 91234-5678`; hoje aparece só
+  com dígitos.
+- **Busca e paginação na listagem**, quando o volume justificar.
+- **Testes end-to-end** com Playwright, transformando em teste o roteiro de
+  Chrome headless usado na conferência manual.
