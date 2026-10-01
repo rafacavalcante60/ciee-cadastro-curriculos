@@ -158,9 +158,43 @@ sendo o mesmo `POST` de JSON.
   Rejeitei concentrar o limite de 5 MB num lugar só: ele fica na API e no
   formulário, como as demais regras.
 
+## Fatia 6: bordas da importação de currículo
+
+[#7](https://github.com/rafacavalcante60/ciee-cadastro-curriculos/issues/7).
+
+PDF digitalizado, protegido por senha ou corrompido devolve 200 com os campos
+`null` e um aviso; a tela mostra o aviso como informação, e o cadastro manual
+segue normalmente.
+
+- **Falha de leitura é 200, não 4xx.** O arquivo é um PDF, então a culpa não é
+  do cliente, e um erro levaria a tela a tratar como bloqueante o que não
+  impede o cadastro. Arquivo que não é PDF continua 400.
+- **Um aviso por causa:** texto vazio indica PDF digitalizado; a exceção de
+  criptografia do PdfPig indica senha; qualquer outra exceção vira "pode estar
+  corrompido" e vai para o log. Capturo `Exception` porque o PdfPig não tem um
+  tipo único para arquivo malformado.
+- **O aviso vem pronto da API**, em português, como o `detail` dos erros. Na
+  tela usa `role="status"` e cor neutra, e não `role="alert"` em vermelho.
+- **Amostras pelo mesmo gerador:** o digitalizado é a página do currículo
+  completo convertida em imagem; o protegido é o mesmo currículo
+  criptografado; o corrompido é o mesmo arquivo cortado no primeiro terço.
+- Antes de escrever as limitações, rodei a extração em casos-limite em vez de
+  supor o resultado. Um achado: `+44 20 7946 0958` vira o telefone
+  `2079460958`. Ficou documentado, não corrigido.
+
 ## Limitações conhecidas
 
-<!-- Consolidado na fatia de documentação, após a importação de PDF estar pronta. -->
+| Limitação | Efeito para quem usa |
+|---|---|
+| PDF digitalizado (página como imagem), sem OCR | Nenhum campo é preenchido; aparece um aviso e os dados são digitados à mão. |
+| Nome pela primeira linha de palavras capitalizadas, quando não há rótulo `Nome:` | Um cabeçalho como "Dados Pessoais" antes do nome vira o nome. Nome escrito todo em minúsculas não é reconhecido e fica vazio. |
+| Diagramação em colunas | O texto é lido na ordem em que foi gravado no arquivo. Uma coluna lateral com "Inglês Avançado" antes do nome faz dele o nome. |
+| Telefone só nos formatos brasileiros, com DDD | Número de outro país fica vazio ou, como `+44 20 7946 0958`, vira um número brasileiro errado. Número sem DDD fica vazio. |
+| Mais de um e-mail ou telefone no currículo | Vale o primeiro que aparece, que pode ser o de uma referência. |
+| Heurísticas em vez de um modelo de linguagem (LLM) | Previsível, testável, sem custo por currículo e sem enviar dados pessoais a um serviço externo. Em troca, erra em layouts fora do padrão que um LLM entenderia, e sobra mais campo para corrigir à mão. |
+
+Em todos os casos o resultado é um palpite: os campos ficam editáveis e o
+cadastro só é salvo depois que a pessoa do recrutamento confere.
 
 ## Melhorias com mais tempo
 
