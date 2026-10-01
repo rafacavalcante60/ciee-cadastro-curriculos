@@ -6,8 +6,10 @@ mesmas regras de validação: preenchimento manual, ou envio de um currículo em
 PDF do qual a aplicação tenta extrair nome, e-mail e telefone.
 
 > **Estado atual:** esqueleto do projeto. O cadastro, a listagem, a tela de
-> detalhes e a importação de PDF estão em desenvolvimento, acompanhados pelas
-> issues do repositório.
+> detalhes e a importação de PDF estão em desenvolvimento. A
+> [especificação](https://github.com/rafacavalcante60/ciee-cadastro-curriculos/issues/1)
+> e os [tickets](https://github.com/rafacavalcante60/ciee-cadastro-curriculos/issues)
+> estão nas issues do repositório.
 
 ## Tecnologias e versões
 

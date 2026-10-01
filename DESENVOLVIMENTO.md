@@ -32,9 +32,10 @@ ao fim de cada fatia de trabalho, não reconstruído no final.
 1. **Questionamento do desenho:** escopo, infraestrutura, modelo de dados,
    contrato da API, testes, documentação e critério de parada, cada pergunta
    com recomendação e motivo.
-2. **Especificação** publicada como issue.
+2. **Especificação** publicada como issue:
+   [#1](https://github.com/rafacavalcante60/ciee-cadastro-curriculos/issues/1).
 3. **Sete tickets**, cada um uma fatia vertical verificável, com dependências
-   declaradas.
+   declaradas: [#2 a #9](https://github.com/rafacavalcante60/ciee-cadastro-curriculos/issues).
 
 **Alternativa considerada:** o [spec-kit](https://github.com/github/spec-kit)
 do GitHub, que gera especificação, plano e lista de tarefas como arquivos
@@ -47,6 +48,8 @@ Commits pequenos, em português, seguindo Conventional Commits. Nenhum entra com
 compilação quebrada ou teste vermelho.
 
 ## Fatia 1: esqueleto e conexão com o banco
+
+Ticket: [#2](https://github.com/rafacavalcante60/ciee-cadastro-curriculos/issues/2).
 
 Monorepo com `frontend/` e `backend/`, SQL Server em container, testes
 configurados nos dois lados e um endpoint de saúde. Nenhum comportamento de
