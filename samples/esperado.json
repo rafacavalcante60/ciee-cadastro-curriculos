@@ -1,0 +1,22 @@
+{
+  "curriculo-completo.pdf": {
+    "nomeCompleto": "Maria Aparecida da Silva",
+    "email": "maria.silva@exemplo.com",
+    "telefone": "11987654321"
+  },
+  "curriculo-sem-telefone.pdf": {
+    "nomeCompleto": "Carlos Eduardo Ferreira",
+    "email": "carlos.ferreira@exemplo.com",
+    "telefone": null
+  },
+  "curriculo-nome-com-rotulo.pdf": {
+    "nomeCompleto": "João Pedro dos Santos",
+    "email": "joao.santos@exemplo.com.br",
+    "telefone": "21998765432"
+  },
+  "curriculo-duas-colunas.pdf": {
+    "nomeCompleto": "Ana Beatriz de Oliveira",
+    "email": "ana.oliveira@exemplo.com",
+    "telefone": "3133334444"
+  }
+}
