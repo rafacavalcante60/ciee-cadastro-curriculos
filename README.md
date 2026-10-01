@@ -124,6 +124,5 @@ GLOSSARY.md Vocabulário do domínio
 
 Deliberadamente não implementado, para manter a solução simples e dentro do que
 foi pedido: autenticação, edição e exclusão de candidatos, paginação, busca e
-filtros na listagem, armazenamento do arquivo PDF, containerização do frontend e
-do backend, implantação em nuvem, testes end-to-end, e uso de modelo de
-linguagem em tempo de execução para a extração.
+filtros na listagem, armazenamento do arquivo PDF, implantação em nuvem, testes
+end-to-end, e uso de modelo de linguagem em tempo de execução para a extração.

@@ -8,7 +8,7 @@ ao fim de cada fatia de trabalho, não reconstruído no final.
 - **Ferramenta:** Claude Code (Anthropic), modelo Claude Opus 5, como par de
   programação em todo o desafio.
 - **Fluxo:** primeiro o modelo me questionou sobre o desenho (27 perguntas em
-  quatro rodadas), depois escrevi a especificação e o recorte em sete tickets, e
+  quatro rodadas), depois escrevi a especificação e o recorte em tickets, e
   só então implementei, um ticket por vez. Não pedi o projeto pronto.
 - **Discordei do modelo** em duas decisões de produto (abaixo).
 - **Toda fatia passa por revisão** antes de fechar: uma conferindo os padrões
@@ -34,13 +34,17 @@ ao fim de cada fatia de trabalho, não reconstruído no final.
    com recomendação e motivo.
 2. **Especificação** publicada como issue:
    [#1](https://github.com/rafacavalcante60/ciee-cadastro-curriculos/issues/1).
-3. **Sete tickets**, cada um uma fatia vertical verificável, com dependências
+3. **Tickets**, cada um uma fatia vertical verificável, com dependências
    declaradas: [#2 a #9](https://github.com/rafacavalcante60/ciee-cadastro-curriculos/issues).
+   O recorte inicial tinha sete (#2 a #8). O oitavo, #9, entrou depois de
+   fechado o esqueleto: subir a aplicação inteira com `docker compose`, para
+   que a avaliadora não precise instalar .NET, Node, `dotnet-ef` nem as
+   bibliotecas do Chrome.
 
 **Alternativa considerada:** o [spec-kit](https://github.com/github/spec-kit)
 do GitHub, que gera especificação, plano e lista de tarefas como arquivos
 versionados para cada funcionalidade. Esse formato compensa em projetos maiores
-ou com várias pessoas. Aqui o escopo cabe em sete tickets, e issues no GitHub
+ou com várias pessoas. Aqui o escopo cabe em oito tickets, e issues no GitHub
 cumprem o mesmo papel com menos cerimônia: cada uma já traz critério de aceite
 e dependências, e a revisão de cada fatia confere o código contra o ticket.
 
