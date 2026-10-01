@@ -1,0 +1,25 @@
+dl {
+  max-width: 640px;
+}
+
+dt {
+  font-weight: 500;
+  margin-top: 16px;
+}
+
+dd {
+  margin: 4px 0 0;
+}
+
+// Mantém as quebras de linha que a pessoa digitou no resumo.
+.resumo {
+  white-space: pre-wrap;
+}
+
+.aviso {
+  padding: 32px 0;
+}
+
+.falha {
+  color: var(--mat-sys-error);
+}

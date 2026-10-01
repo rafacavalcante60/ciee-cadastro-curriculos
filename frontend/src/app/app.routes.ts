@@ -16,5 +16,12 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./candidatos/cadastro-candidato/cadastro-candidato.component').then(m => m.CadastroCandidatoComponent)
   },
+  // Depois de 'candidatos/novo': o router casa na ordem, e ':id' capturaria 'novo'.
+  {
+    path: 'candidatos/:id',
+    title: 'Candidato',
+    loadComponent: () =>
+      import('./candidatos/detalhes-candidato/detalhes-candidato.component').then(m => m.DetalhesCandidatoComponent)
+  },
   { path: '**', redirectTo: 'candidatos' }
 ];

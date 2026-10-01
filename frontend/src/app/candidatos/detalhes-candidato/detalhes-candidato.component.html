@@ -1,0 +1,38 @@
+@switch (situacao()) {
+  @case ('carregando') {
+    <mat-spinner diameter="40" aria-label="Carregando candidato" />
+  }
+  @case ('naoEncontrado') {
+    <div class="aviso" role="alert">
+      <h1>Candidato não encontrado</h1>
+      <p>Ele pode ter sido removido ou o endereço está incorreto.</p>
+    </div>
+  }
+  @case ('falha') {
+    <p class="falha" role="alert">Não foi possível carregar o candidato. Tente novamente em instantes.</p>
+  }
+  @case ('carregado') {
+    @if (candidato(); as candidato) {
+      <h1>{{ candidato.nomeCompleto }}</h1>
+
+      <dl>
+        <dt>E-mail</dt>
+        <dd>{{ candidato.email }}</dd>
+
+        <dt>Telefone</dt>
+        <dd>{{ candidato.telefone ?? 'Não informado' }}</dd>
+
+        <dt>Área ou cargo de interesse</dt>
+        <dd>{{ candidato.areaOuCargoDeInteresse ?? 'Não informado' }}</dd>
+
+        <dt>Cadastrado em</dt>
+        <dd>{{ candidato.dataCadastro | date: 'dd/MM/yyyy HH:mm' }}</dd>
+
+        <dt>Resumo profissional</dt>
+        <dd class="resumo">{{ candidato.resumoProfissional ?? 'Não informado' }}</dd>
+      </dl>
+    }
+  }
+}
+
+<a mat-button routerLink="/candidatos">Voltar para a listagem</a>

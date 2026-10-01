@@ -17,4 +17,8 @@ export class CandidatoService {
   listar(): Observable<Candidato[]> {
     return this.http.get<Candidato[]>(this.endereco);
   }
+
+  detalhar(id: number): Observable<Candidato> {
+    return this.http.get<Candidato>(`${this.endereco}/${id}`);
+  }
 }

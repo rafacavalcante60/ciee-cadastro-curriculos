@@ -61,4 +61,16 @@ describe('CandidatoService', () => {
 
     expect(recebidos).toEqual([candidatoGravado, outro]);
   });
+
+  it('detalha candidato com GET em /api/candidatos/{id}', () => {
+    let recebido: Candidato | undefined;
+
+    servico.detalhar(7).subscribe(candidato => (recebido = candidato));
+
+    const requisicao = http.expectOne('/api/candidatos/7');
+    expect(requisicao.request.method).toBe('GET');
+    requisicao.flush(candidatoGravado);
+
+    expect(recebido).toEqual(candidatoGravado);
+  });
 });

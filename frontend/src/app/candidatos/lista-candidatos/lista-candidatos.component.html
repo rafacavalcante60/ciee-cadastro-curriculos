@@ -16,7 +16,9 @@
   <table mat-table [dataSource]="candidatos()">
     <ng-container matColumnDef="nomeCompleto">
       <th mat-header-cell *matHeaderCellDef>Nome</th>
-      <td mat-cell *matCellDef="let candidato">{{ candidato.nomeCompleto }}</td>
+      <td mat-cell *matCellDef="let candidato">
+        <a [routerLink]="['/candidatos', candidato.id]">{{ candidato.nomeCompleto }}</a>
+      </td>
     </ng-container>
 
     <ng-container matColumnDef="email">
