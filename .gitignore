@@ -64,3 +64,8 @@ Thumbs.db
 .idea/
 .vscode/*
 !.vscode/extensions.json
+
+# ---- Assistente de IA ----
+# Configuracao local do Claude Code; o uso de IA esta descrito no registro do desenvolvimento.
+CLAUDE.md
+docs/agents/
