@@ -45,7 +45,6 @@ public class CandidatosController : ControllerBase
         return candidatos.Select(CandidatoResposta.De);
     }
 
-    // NotFound() vira ProblemDetails pelo [ApiController], sem corpo montado aqui.
     [HttpGet("{id:int}")]
     [ProducesResponseType(typeof(CandidatoResposta), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
