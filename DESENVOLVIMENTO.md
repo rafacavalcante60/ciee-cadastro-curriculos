@@ -180,7 +180,8 @@ Ticket: [#4](https://github.com/rafacavalcante60/ciee-cadastro-curriculos/issues
 
 `GET /api/candidatos/{id}` e a tela de detalhes, alcançada pelo nome do
 candidato na listagem. Candidato inexistente gera 404 em ProblemDetails na API
-e uma mensagem de "não encontrado" na tela.
+e uma mensagem de "não encontrado" na tela. **Tempo:** cerca de 30 minutos,
+incluindo revisão.
 
 **Onde a IA ajudou:** testes no seam HTTP escritos antes do endpoint, tela de
 detalhes com seus testes, conferência do fluxo no navegador.
