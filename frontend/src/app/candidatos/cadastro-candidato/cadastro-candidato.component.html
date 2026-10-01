@@ -1,5 +1,21 @@
 <h1>Novo candidato</h1>
 
+<section class="importacao">
+  <input #seletor type="file" accept="application/pdf,.pdf" hidden (change)="importarCurriculo(seletor)">
+  <button mat-stroked-button type="button" (click)="seletor.click()" [disabled]="extraindo()">
+    @if (extraindo()) {
+      <mat-spinner diameter="18" />
+      Lendo currículo…
+    } @else {
+      Preencher a partir de um PDF
+    }
+  </button>
+  <p class="dica">Opcional. Currículo em PDF de até 5 MB. Confira os campos preenchidos antes de salvar.</p>
+  @if (falhaNaExtracao(); as mensagem) {
+    <p class="falha" role="alert">{{ mensagem }}</p>
+  }
+</section>
+
 <form [formGroup]="formulario" (ngSubmit)="salvar()" novalidate>
   <mat-form-field>
     <mat-label>Nome completo</mat-label>

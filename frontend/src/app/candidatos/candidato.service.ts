@@ -2,7 +2,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, throwError } from 'rxjs';
 
-import { Candidato, FalhaAoCadastrar, NovoCandidato } from './candidato.model';
+import { CamposExtraidos, Candidato, FalhaAoCadastrar, FalhaNaExtracao, NovoCandidato } from './candidato.model';
 
 // Caminho relativo: em desenvolvimento o proxy do Angular repassa /api, sem CORS.
 @Injectable({ providedIn: 'root' })
@@ -23,6 +23,15 @@ export class CandidatoService {
 
   detalhar(id: number): Observable<Candidato> {
     return this.http.get<Candidato>(`${this.endereco}/${id}`);
+  }
+
+  // Em caso de erro, o Observable falha com um FalhaNaExtracao.
+  extrairCurriculo(arquivo: File): Observable<CamposExtraidos> {
+    const formulario = new FormData();
+    formulario.append('arquivo', arquivo);
+    return this.http.post<CamposExtraidos>('/api/curriculos/extracao', formulario).pipe(
+      catchError((erro: HttpErrorResponse) => throwError(() => traduzirFalhaNaExtracao(erro)))
+    );
   }
 }
 
@@ -45,5 +54,15 @@ function traduzirFalha(erro: HttpErrorResponse): FalhaAoCadastrar {
     return { tipo: 'servidorIndisponivel' };
   }
 
+  return { tipo: 'inesperada' };
+}
+
+function traduzirFalhaNaExtracao(erro: HttpErrorResponse): FalhaNaExtracao {
+  if (erro.status === 400) {
+    return { tipo: 'arquivoInvalido', mensagem: erro.error?.detail ?? 'O arquivo enviado não pôde ser lido.' };
+  }
+  if (erro.status === 0 || erro.status >= 500) {
+    return { tipo: 'servidorIndisponivel' };
+  }
   return { tipo: 'inesperada' };
 }

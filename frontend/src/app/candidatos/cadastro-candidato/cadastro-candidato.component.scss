@@ -19,3 +19,13 @@ mat-spinner {
 .falha {
   color: var(--mat-sys-error);
 }
+
+.importacao {
+  max-width: 640px;
+  margin-bottom: 24px;
+}
+
+.dica {
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.875rem;
+}

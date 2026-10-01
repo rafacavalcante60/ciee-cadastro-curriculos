@@ -7,7 +7,7 @@ import { Subject } from 'rxjs';
 
 import { CadastroCandidatoComponent } from './cadastro-candidato.component';
 import { CandidatoService } from '../candidato.service';
-import { Candidato, FalhaAoCadastrar, NovoCandidato } from '../candidato.model';
+import { CamposExtraidos, Candidato, FalhaAoCadastrar, NovoCandidato } from '../candidato.model';
 
 @Component({ template: '' })
 class ListagemFalsaComponent {}
@@ -17,14 +17,22 @@ describe('CadastroCandidatoComponent', () => {
   let tela: HTMLElement;
   let respostaDoServidor: Subject<Candidato>;
   let enviados: NovoCandidato[];
+  let respostaDaExtracao: Subject<CamposExtraidos>;
+  let arquivosEnviados: File[];
 
   beforeEach(() => {
     respostaDoServidor = new Subject<Candidato>();
     enviados = [];
+    respostaDaExtracao = new Subject<CamposExtraidos>();
+    arquivosEnviados = [];
     const servicoFalso: Partial<CandidatoService> = {
       criar: (novo: NovoCandidato) => {
         enviados.push(novo);
         return respostaDoServidor.asObservable();
+      },
+      extrairCurriculo: (arquivo: File) => {
+        arquivosEnviados.push(arquivo);
+        return respostaDaExtracao.asObservable();
       }
     };
 
@@ -251,6 +259,96 @@ describe('CadastroCandidatoComponent', () => {
       falhar({ tipo: 'servidorIndisponivel' });
 
       expect(tela.querySelector('[role="alert"]')?.textContent).toContain('Não foi possível falar com o servidor');
+    });
+  });
+
+  describe('preenchimento a partir de um currículo em PDF', () => {
+    const curriculo = new File(['%PDF-1.7'], 'curriculo.pdf', { type: 'application/pdf' });
+
+    function escolherArquivo(arquivo: File): void {
+      const seletor = tela.querySelector<HTMLInputElement>('input[type="file"]')!;
+      const transferencia = new DataTransfer();
+      transferencia.items.add(arquivo);
+      seletor.files = transferencia.files;
+      seletor.dispatchEvent(new Event('change'));
+      fixture.detectChanges();
+    }
+
+    function extrair(campos: CamposExtraidos): void {
+      respostaDaExtracao.next(campos);
+      respostaDaExtracao.complete();
+      fixture.detectChanges();
+    }
+
+    function valorDoCampo(campo: string): string {
+      return tela.querySelector<HTMLInputElement>(`[formControlName="${campo}"]`)!.value;
+    }
+
+    it('envia o arquivo escolhido para a extração', () => {
+      escolherArquivo(curriculo);
+
+      expect(arquivosEnviados).toEqual([curriculo]);
+    });
+
+    it('mostra que está lendo o arquivo e impede outro envio enquanto isso', () => {
+      escolherArquivo(curriculo);
+
+      const botao = tela.querySelector<HTMLButtonElement>('.importacao button')!;
+      expect(botao.disabled).toBeTrue();
+      expect(botao.textContent).toContain('Lendo currículo');
+
+      extrair({ nomeCompleto: null, email: null, telefone: null });
+
+      expect(botao.disabled).toBeFalse();
+    });
+
+    it('preenche os campos identificados, que continuam editáveis, e o cadastro conclui', () => {
+      escolherArquivo(curriculo);
+      extrair({ nomeCompleto: 'Maria Aparecida da Silva', email: 'maria.silva@exemplo.com', telefone: '11987654321' });
+
+      expect(valorDoCampo('nomeCompleto')).toBe('Maria Aparecida da Silva');
+      expect(valorDoCampo('email')).toBe('maria.silva@exemplo.com');
+      expect(valorDoCampo('telefone')).toBe('11987654321');
+
+      preencher('nomeCompleto', 'Maria Aparecida da Silva Souza');
+      preencher('areaOuCargoDeInteresse', 'Desenvolvimento de software');
+      enviar();
+
+      expect(enviados).toEqual([{
+        nomeCompleto: 'Maria Aparecida da Silva Souza',
+        email: 'maria.silva@exemplo.com',
+        telefone: '11987654321',
+        areaOuCargoDeInteresse: 'Desenvolvimento de software',
+        resumoProfissional: null
+      }]);
+    });
+
+    it('deixa vazio o campo não identificado, mesmo que já tivesse valor', () => {
+      preencher('telefone', '(21) 3333-4444');
+
+      escolherArquivo(curriculo);
+      extrair({ nomeCompleto: 'Maria Aparecida da Silva', email: 'maria.silva@exemplo.com', telefone: null });
+
+      expect(valorDoCampo('telefone')).toBe('');
+    });
+
+    it('com arquivo recusado pela API, mostra o motivo e mantém o formulário utilizável', () => {
+      escolherArquivo(curriculo);
+      respostaDaExtracao.error({ tipo: 'arquivoInvalido', mensagem: 'O arquivo enviado não é um PDF.' });
+      fixture.detectChanges();
+
+      expect(tela.querySelector('.importacao [role="alert"]')?.textContent).toContain('O arquivo enviado não é um PDF.');
+
+      preencherValido();
+      enviar();
+      expect(enviados.length).toBe(1);
+    });
+
+    it('recusa arquivo acima de 5 MB sem enviá-lo', () => {
+      escolherArquivo(new File([new Uint8Array(5 * 1024 * 1024 + 1)], 'grande.pdf', { type: 'application/pdf' }));
+
+      expect(arquivosEnviados).toEqual([]);
+      expect(tela.querySelector('.importacao [role="alert"]')?.textContent).toContain('O arquivo excede o limite de 5 MB.');
     });
   });
 });

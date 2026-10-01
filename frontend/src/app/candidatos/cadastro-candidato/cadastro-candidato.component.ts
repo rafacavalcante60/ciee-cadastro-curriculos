@@ -8,7 +8,10 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { CandidatoService } from '../candidato.service';
-import { FalhaAoCadastrar } from '../candidato.model';
+import { FalhaAoCadastrar, FalhaNaExtracao } from '../candidato.model';
+
+// Mesmo limite da API: recusar aqui evita enviar um arquivo que voltaria com 400.
+const limiteDoCurriculoEmBytes = 5 * 1024 * 1024;
 
 // Único formulário da aplicação: o cadastro manual e o com PDF usam este componente.
 // As regras e as mensagens repetem as da API, que é a autoridade final.
@@ -40,6 +43,38 @@ export class CadastroCandidatoComponent {
 
   readonly salvando = signal(false);
   readonly falha = signal<Exclude<FalhaAoCadastrar['tipo'], 'campos'> | null>(null);
+  readonly extraindo = signal(false);
+  readonly falhaNaExtracao = signal<string | null>(null);
+
+  importarCurriculo(seletor: HTMLInputElement): void {
+    const arquivo = seletor.files?.[0];
+    // Limpo para que escolher o mesmo arquivo de novo dispare outro change.
+    seletor.value = '';
+    if (!arquivo) {
+      return;
+    }
+
+    this.falhaNaExtracao.set(null);
+    if (arquivo.size > limiteDoCurriculoEmBytes) {
+      this.falhaNaExtracao.set('O arquivo excede o limite de 5 MB.');
+      return;
+    }
+
+    this.extraindo.set(true);
+    this.servico.extrairCurriculo(arquivo).subscribe({
+      // Campo não identificado volta vazio, para não sobrar o valor de outro currículo.
+      next: campos => this.formulario.patchValue({
+        nomeCompleto: campos.nomeCompleto ?? '',
+        email: campos.email ?? '',
+        telefone: campos.telefone ?? ''
+      }),
+      error: (falha: FalhaNaExtracao) => {
+        this.extraindo.set(false);
+        this.falhaNaExtracao.set(mensagemDaFalhaNaExtracao(falha));
+      },
+      complete: () => this.extraindo.set(false)
+    });
+  }
 
   salvar(): void {
     // Segundo clique ou Enter durante o salvamento não gera um segundo cadastro.
@@ -143,6 +178,17 @@ function telefone(controle: AbstractControl<string>): ValidationErrors | null {
   }
   const normalizado = controle.value.replace(/[\s().-]/g, '');
   return /^[0-9]{10,11}$/.test(normalizado) ? null : { telefone: true };
+}
+
+function mensagemDaFalhaNaExtracao(falha: FalhaNaExtracao): string {
+  switch (falha.tipo) {
+    case 'arquivoInvalido':
+      return falha.mensagem;
+    case 'servidorIndisponivel':
+      return 'Não foi possível falar com o servidor. Tente novamente em instantes ou preencha os campos à mão.';
+    case 'inesperada':
+      return 'Não foi possível ler o currículo. Preencha os campos à mão.';
+  }
 }
 
 /** Campo opcional deixado em branco é gravado como ausente, não como texto vazio. */

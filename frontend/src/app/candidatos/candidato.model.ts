@@ -21,3 +21,15 @@ export type FalhaAoCadastrar =
   | { tipo: 'campos'; erros: Record<string, string> }
   | { tipo: 'servidorIndisponivel' }
   | { tipo: 'inesperada' };
+
+/** Palpite da extração: null no campo que não foi identificado. */
+export interface CamposExtraidos {
+  nomeCompleto: string | null;
+  email: string | null;
+  telefone: string | null;
+}
+
+export type FalhaNaExtracao =
+  | { tipo: 'arquivoInvalido'; mensagem: string }
+  | { tipo: 'servidorIndisponivel' }
+  | { tipo: 'inesperada' };

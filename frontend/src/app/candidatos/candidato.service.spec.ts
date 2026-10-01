@@ -3,7 +3,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { CandidatoService } from './candidato.service';
-import { Candidato, FalhaAoCadastrar, NovoCandidato } from './candidato.model';
+import { CamposExtraidos, Candidato, FalhaAoCadastrar, FalhaNaExtracao, NovoCandidato } from './candidato.model';
 
 describe('CandidatoService', () => {
   let servico: CandidatoService;
@@ -138,5 +138,45 @@ describe('CandidatoService', () => {
     requisicao.flush(candidatoGravado);
 
     expect(recebido).toEqual(candidatoGravado);
+  });
+
+  describe('extração de currículo', () => {
+    const arquivo = new File(['%PDF-1.7'], 'curriculo.pdf', { type: 'application/pdf' });
+
+    it('envia o arquivo em multipart para /api/curriculos/extracao e devolve os campos', () => {
+      const campos: CamposExtraidos = { nomeCompleto: 'Maria da Silva', email: null, telefone: '11987654321' };
+      let recebidos: CamposExtraidos | undefined;
+
+      servico.extrairCurriculo(arquivo).subscribe(resposta => (recebidos = resposta));
+
+      const requisicao = http.expectOne('/api/curriculos/extracao');
+      expect(requisicao.request.method).toBe('POST');
+      expect((requisicao.request.body as FormData).get('arquivo')).toBe(arquivo);
+      requisicao.flush(campos);
+
+      expect(recebidos).toEqual(campos);
+    });
+
+    it('traduz 400 em arquivo inválido, com a mensagem da API', () => {
+      let falha: FalhaNaExtracao | undefined;
+
+      servico.extrairCurriculo(arquivo).subscribe({ error: erro => (falha = erro) });
+
+      http.expectOne('/api/curriculos/extracao').flush(
+        { title: 'Arquivo inválido', detail: 'O arquivo enviado não é um PDF.' },
+        { status: 400, statusText: 'Bad Request' });
+
+      expect(falha).toEqual({ tipo: 'arquivoInvalido', mensagem: 'O arquivo enviado não é um PDF.' });
+    });
+
+    it('traduz falha de rede em servidor indisponível', () => {
+      let falha: FalhaNaExtracao | undefined;
+
+      servico.extrairCurriculo(arquivo).subscribe({ error: erro => (falha = erro) });
+
+      http.expectOne('/api/curriculos/extracao').error(new ProgressEvent('error'));
+
+      expect(falha).toEqual({ tipo: 'servidorIndisponivel' });
+    });
   });
 });
