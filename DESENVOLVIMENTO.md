@@ -160,7 +160,8 @@ sendo o mesmo `POST` de JSON.
 
 ## Fatia 6: bordas da importação de currículo
 
-[#7](https://github.com/rafacavalcante60/ciee-cadastro-curriculos/issues/7).
+[#7](https://github.com/rafacavalcante60/ciee-cadastro-curriculos/issues/7) ·
+cerca de 40 minutos.
 
 PDF digitalizado, protegido por senha ou corrompido devolve 200 com os campos
 `null` e um aviso; a tela mostra o aviso como informação, e o cadastro manual
