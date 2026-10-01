@@ -33,15 +33,17 @@ PDF do qual a aplicação tenta extrair nome, e-mail e telefone.
 Quatro passos a partir de um clone novo:
 
 ```bash
-# 1. Configure as credenciais locais (nenhuma credencial é versionada)
+# 1. Configure as credenciais locais
+#    O .env fica fora do repositório; ajuste a senha se quiser.
 cp .env.example .env
 
 # 2. Suba o SQL Server
 docker compose up -d
 
 # 3. Crie a estrutura do banco
+#    (ainda sem efeito: a primeira migration chega com a fatia de cadastro)
 cd backend
-export ConnectionStrings__CurriculosDb="Server=localhost,1433;Database=CieeCurriculos;User Id=sa;Password=Desenvolvimento@2026;TrustServerCertificate=True"
+export ConnectionStrings__CurriculosDb="Server=localhost,1433;Database=CieeCurriculos;User Id=sa;Password=SUA_SENHA;TrustServerCertificate=True"
 dotnet ef database update --project CieeCurriculos.Api
 
 # 4. Rode a API e, em outro terminal, o frontend
@@ -62,7 +64,8 @@ curl http://localhost:5080/api/saude
 
 A resposta distingue três situações: a API no ar, o servidor de banco
 alcançável, e o banco da aplicação já criado. Se o banco aparecer como
-`ausente`, falta o passo 3.
+`ausente`, falta o passo 3 — e, enquanto o esqueleto não tiver a primeira
+migration, `ausente` é a resposta esperada.
 
 ### Configurando a connection string
 
@@ -112,7 +115,6 @@ sudo apt-get install -y libnss3 libasound2t64
 ```
 backend/    API em ASP.NET Core e projeto de testes
 frontend/   Aplicação Angular
-docs/adr/   Decisões de arquitetura e seus motivos
 GLOSSARY.md Vocabulário do domínio
 ```
 
