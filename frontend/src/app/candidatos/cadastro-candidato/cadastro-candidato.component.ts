@@ -64,14 +64,18 @@ export class CadastroCandidatoComponent {
 
     this.extraindo.set(true);
     this.servico.extrairCurriculo(arquivo).subscribe({
-      // Campo não identificado volta vazio, para não sobrar o valor de outro currículo.
       next: campos => {
+        this.avisoDaExtracao.set(campos.aviso);
+        // Com aviso nada foi lido: apagar o formulário levaria o que já foi digitado.
+        if (campos.aviso) {
+          return;
+        }
+        // Campo não identificado volta vazio, para não sobrar o valor de outro currículo.
         this.formulario.patchValue({
           nomeCompleto: campos.nomeCompleto ?? '',
           email: campos.email ?? '',
           telefone: campos.telefone ?? ''
         });
-        this.avisoDaExtracao.set(campos.aviso);
       },
       error: (falha: FalhaNaExtracao) => {
         this.extraindo.set(false);

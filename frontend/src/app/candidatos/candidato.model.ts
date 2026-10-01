@@ -27,7 +27,6 @@ export interface CamposExtraidos {
   nomeCompleto: string | null;
   email: string | null;
   telefone: string | null;
-  /** Motivo de nada ter sido lido, como PDF digitalizado ou protegido por senha. */
   aviso: string | null;
 }
 

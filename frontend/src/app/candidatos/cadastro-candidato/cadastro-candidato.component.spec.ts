@@ -347,6 +347,17 @@ describe('CadastroCandidatoComponent', () => {
       expect(enviados.length).toBe(1);
     });
 
+    it('com aviso da extração, mantém o que já tinha sido digitado', () => {
+      preencher('nomeCompleto', 'Maria da Silva');
+      preencher('email', 'maria.silva@exemplo.com');
+
+      escolherArquivo(curriculo);
+      extrair({ nomeCompleto: null, email: null, telefone: null, aviso: 'O PDF é protegido por senha e não pôde ser lido. Preencha os campos à mão.' });
+
+      expect(valorDoCampo('nomeCompleto')).toBe('Maria da Silva');
+      expect(valorDoCampo('email')).toBe('maria.silva@exemplo.com');
+    });
+
     it('apaga o aviso anterior ao ler outro currículo', () => {
       escolherArquivo(curriculo);
       extrair({ nomeCompleto: null, email: null, telefone: null, aviso: 'O PDF é protegido por senha e não pôde ser lido. Preencha os campos à mão.' });

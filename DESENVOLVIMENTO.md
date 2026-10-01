@@ -181,13 +181,17 @@ segue normalmente.
 - Antes de escrever as limitações, rodei a extração em casos-limite em vez de
   supor o resultado. Um achado: `+44 20 7946 0958` vira o telefone
   `2079460958`. Ficou documentado, não corrigido.
+- A revisão achou um defeito, corrigido com teste: um PDF ilegível apagava o
+  que já tinha sido digitado. Agora, com aviso, o formulário fica como estava.
+  Rejeitei levar a checagem de texto vazio para junto das outras falhas de
+  leitura: o ticket pede o teste de unidade justamente sobre o texto.
 
 ## Limitações conhecidas
 
 | Limitação | Efeito para quem usa |
 |---|---|
 | PDF digitalizado (página como imagem), sem OCR | Nenhum campo é preenchido; aparece um aviso e os dados são digitados à mão. |
-| Nome pela primeira linha de palavras capitalizadas, quando não há rótulo `Nome:` | Um cabeçalho como "Dados Pessoais" antes do nome vira o nome. Nome escrito todo em minúsculas não é reconhecido e fica vazio. |
+| Nome pela primeira linha de palavras capitalizadas, quando não há rótulo `Nome:` | Um cabeçalho como "Dados Pessoais" antes do nome vira o nome. Nome escrito todo em minúsculas não é reconhecido: vale a próxima linha que pareça nome, como "Experiência Profissional", ou o campo fica vazio. |
 | Diagramação em colunas | O texto é lido na ordem em que foi gravado no arquivo. Uma coluna lateral com "Inglês Avançado" antes do nome faz dele o nome. |
 | Telefone só nos formatos brasileiros, com DDD | Número de outro país fica vazio ou, como `+44 20 7946 0958`, vira um número brasileiro errado. Número sem DDD fica vazio. |
 | Mais de um e-mail ou telefone no currículo | Vale o primeiro que aparece, que pode ser o de uma referência. |
