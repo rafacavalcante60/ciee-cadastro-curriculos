@@ -5,10 +5,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CieeCurriculos.Api.Controllers;
 
-/// <summary>
-/// Verificação de que a API está no ar e consegue falar com o SQL Server.
-/// Serve para confirmar a configuração de um clone novo antes de usar a aplicação.
-/// </summary>
 [ApiController]
 [Route("api/saude")]
 public class SaudeController : ControllerBase
@@ -20,14 +16,8 @@ public class SaudeController : ControllerBase
         _contexto = contexto;
     }
 
-    /// <summary>
-    /// Informa a situação da API, do servidor de banco e do banco da aplicação.
-    /// </summary>
-    /// <remarks>
-    /// Servidor inacessível e banco ainda não criado exigem providências opostas de
-    /// quem está configurando o projeto — subir o container contra criar o schema —,
-    /// por isso são relatados em campos separados em vez de uma única resposta de falha.
-    /// </remarks>
+    // Servidor inacessível e banco ainda não criado pedem providências diferentes
+    // (subir o container ou criar o schema), por isso são relatados separados.
     [HttpGet]
     [ProducesResponseType(typeof(RespostaSaude), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status503ServiceUnavailable)]
@@ -55,10 +45,7 @@ public class SaudeController : ControllerBase
                 : "O servidor responde, mas o banco da aplicação não existe. Crie a estrutura com 'dotnet ef database update'."));
     }
 
-    /// <summary>
-    /// Verifica se o servidor responde, independentemente de o banco da aplicação
-    /// já ter sido criado, conectando ao catálogo administrativo.
-    /// </summary>
+    // Conecta ao master para saber se o servidor responde mesmo sem o banco da aplicação.
     private async Task<bool> ServidorAcessivelAsync(CancellationToken cancelamento)
     {
         try
@@ -74,22 +61,14 @@ public class SaudeController : ControllerBase
         }
         catch (SqlException)
         {
-            // Servidor fora do ar, credencial recusada, tempo de espera esgotado.
             return false;
         }
         catch (ArgumentException)
         {
-            // Connection string malformada: a montagem da conexão falha antes de
-            // qualquer tentativa de rede. É o erro de configuração que este
-            // endpoint existe para diagnosticar, então também responde 503.
+            // Connection string malformada: também é erro de configuração, então 503.
             return false;
         }
     }
 }
 
-/// <summary>Resultado da verificação de saúde da aplicação.</summary>
-/// <param name="Api">Situação da API.</param>
-/// <param name="Servidor">Situação do servidor de banco de dados.</param>
-/// <param name="BancoDaAplicacao">Situação do banco da aplicação: <c>ok</c> ou <c>ausente</c>.</param>
-/// <param name="Detalhe">Orientação para o caso de algo não estar pronto.</param>
 public record RespostaSaude(string Api, string Servidor, string BancoDaAplicacao, string? Detalhe);

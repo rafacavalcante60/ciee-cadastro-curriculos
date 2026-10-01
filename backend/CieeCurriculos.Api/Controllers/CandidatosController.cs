@@ -5,9 +5,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CieeCurriculos.Api.Controllers;
 
-/// <summary>
-/// Cadastro e consulta de candidatos.
-/// </summary>
 [ApiController]
 [Route("api/candidatos")]
 public class CandidatosController : ControllerBase
@@ -21,10 +18,7 @@ public class CandidatosController : ControllerBase
         _relogio = relogio;
     }
 
-    /// <summary>
-    /// Cadastra um candidato. Recebe JSON puro: o currículo em PDF, quando existe,
-    /// só serve para preencher o formulário e nunca acompanha o salvamento.
-    /// </summary>
+    // Recebe JSON puro: o PDF só preenche o formulário e nunca acompanha o salvamento.
     [HttpPost]
     [ProducesResponseType(typeof(CandidatoResposta), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -35,14 +29,9 @@ public class CandidatosController : ControllerBase
         _contexto.Candidatos.Add(candidato);
         await _contexto.SaveChangesAsync(cancelamento);
 
-        // A rota de detalhes chega com a fatia da tela de detalhes; o endereço já
-        // é o definitivo do contrato da API.
         return Created($"/api/candidatos/{candidato.Id}", CandidatoResposta.De(candidato));
     }
 
-    /// <summary>
-    /// Lista os candidatos, dos cadastrados mais recentemente para os mais antigos.
-    /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<CandidatoResposta>), StatusCodes.Status200OK)]
     public async Task<IEnumerable<CandidatoResposta>> Listar(CancellationToken cancelamento)

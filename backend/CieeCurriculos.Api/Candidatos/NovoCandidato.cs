@@ -1,10 +1,5 @@
 namespace CieeCurriculos.Api.Candidatos;
 
-/// <summary>
-/// Dados enviados pelo formulário de cadastro. Não traz <c>Id</c> nem
-/// <c>DataCadastro</c>: os dois são gerados no servidor, e um valor enviado
-/// pelo cliente para eles é simplesmente ignorado.
-/// </summary>
 public record NovoCandidato(
     string NomeCompleto,
     string Email,
@@ -12,10 +7,7 @@ public record NovoCandidato(
     string? AreaOuCargoDeInteresse,
     string? ResumoProfissional)
 {
-    /// <summary>
-    /// Monta o candidato a gravar, com o e-mail normalizado para minúsculas e sem
-    /// espaços nas pontas, em vez de depender da collation do banco.
-    /// </summary>
+    // E-mail normalizado aqui em vez de depender da collation do banco.
     public Candidato ParaCandidato(DateTime dataCadastro) => new()
     {
         NomeCompleto = NomeCompleto,

@@ -3,9 +3,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CieeCurriculos.Api.Dados;
 
-/// <summary>
-/// Contexto de acesso aos dados do cadastro de currículos.
-/// </summary>
 public class CurriculosDbContext : DbContext
 {
     public CurriculosDbContext(DbContextOptions<CurriculosDbContext> opcoes) : base(opcoes)

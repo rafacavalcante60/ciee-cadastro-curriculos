@@ -8,10 +8,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { CandidatoService } from '../candidato.service';
 
-/**
- * Formulário de cadastro de candidato. É o único formulário da aplicação: o
- * cadastro manual e o cadastro com PDF usam este mesmo componente.
- */
+// Único formulário da aplicação: o cadastro manual e o com PDF usam este componente.
 @Component({
   selector: 'app-cadastro-candidato',
   imports: [

@@ -8,7 +8,6 @@ import { MatTableModule } from '@angular/material/table';
 import { Candidato } from '../candidato.model';
 import { CandidatoService } from '../candidato.service';
 
-/** Listagem dos candidatos, dos cadastrados mais recentemente para os mais antigos. */
 @Component({
   selector: 'app-lista-candidatos',
   imports: [DatePipe, RouterLink, MatButtonModule, MatProgressSpinnerModule, MatTableModule],

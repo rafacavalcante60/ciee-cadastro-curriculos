@@ -17,8 +17,6 @@ construtor.Services.AddSwaggerGen(opcoes =>
     });
 });
 
-// A connection string vem de appsettings (placeholder), sobrescrita por
-// variável de ambiente (ConnectionStrings__CurriculosDb) ou por dotnet user-secrets.
 construtor.Services.AddDbContext<CurriculosDbContext>(opcoes =>
     opcoes.UseSqlServer(construtor.Configuration.GetConnectionString("CurriculosDb")));
 
@@ -30,8 +28,7 @@ if (aplicacao.Environment.IsDevelopment())
     aplicacao.UseSwaggerUI();
 }
 
-// Nenhuma migration é aplicada automaticamente aqui, por decisão de projeto:
-// criar o schema é um passo explícito, documentado no README.
+// Migrations não são aplicadas aqui: criar o schema é um passo explícito do README.
 
 aplicacao.MapControllers();
 

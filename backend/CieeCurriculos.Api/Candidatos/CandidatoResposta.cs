@@ -1,6 +1,5 @@
 namespace CieeCurriculos.Api.Candidatos;
 
-/// <summary>Candidato como a API o devolve.</summary>
 public record CandidatoResposta(
     int Id,
     string NomeCompleto,
