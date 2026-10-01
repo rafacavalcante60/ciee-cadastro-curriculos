@@ -5,7 +5,7 @@ namespace CieeCurriculos.Api.Testes;
 public class ExtracaoDeCamposTestes
 {
     [Fact]
-    public void Curriculo_completo_produz_os_tres_campos()
+    public void Curriculo_completo_produz_os_tres_campos_sem_avisos()
     {
         var campos = ExtracaoDeCampos.Extrair("""
             Maria Aparecida da Silva
@@ -13,7 +13,8 @@ public class ExtracaoDeCamposTestes
             maria.silva@exemplo.com | (11) 98765-4321
             """);
 
-        Assert.Equal(new CamposExtraidos("Maria Aparecida da Silva", "maria.silva@exemplo.com", "11987654321"), campos);
+        Assert.Equivalent(new CamposExtraidos("Maria Aparecida da Silva", "maria.silva@exemplo.com", "11987654321", []),
+            campos, strict: true);
     }
 
     [Theory]
@@ -26,19 +27,45 @@ public class ExtracaoDeCamposTestes
     {
         var campos = ExtracaoDeCampos.Extrair(texto);
 
-        Assert.Equal(new CamposExtraidos(nome, email, telefone), campos);
+        Assert.Equal((nome, email, telefone), (campos.NomeCompleto, campos.Email, campos.Telefone));
     }
 
-    // É o que sai de um PDF digitalizado: a página é uma imagem.
+    [Fact]
+    public void Cada_campo_nao_identificado_gera_um_aviso()
+    {
+        var campos = ExtracaoDeCampos.Extrair("""
+            Maria Aparecida da Silva
+            maria.silva@exemplo.com
+            """);
+
+        Assert.Equal(new[] { "Telefone não encontrado no currículo." }, campos.Avisos);
+    }
+
+    [Fact]
+    public void Texto_sem_nenhum_campo_avisa_de_todos()
+    {
+        var campos = ExtracaoDeCampos.Extrair("experiência em atendimento ao cliente");
+
+        Assert.Equal(new[]
+        {
+            "Nome completo não encontrado no currículo.",
+            "E-mail não encontrado no currículo.",
+            "Telefone não encontrado no currículo."
+        }, campos.Avisos);
+    }
+
+    // É o que sai de um PDF digitalizado: a página é uma imagem. Um aviso por
+    // campo repetiria três vezes a mesma causa.
     [Theory]
     [InlineData("")]
     [InlineData(" \n\n  \n")]
-    public void Texto_vazio_produz_todos_os_campos_nulos_e_um_aviso(string texto)
+    public void Texto_vazio_produz_todos_os_campos_nulos_e_um_unico_aviso(string texto)
     {
         var campos = ExtracaoDeCampos.Extrair(texto);
 
-        Assert.Equal(new CamposExtraidos(null, null, null,
-            "O PDF não tem texto selecionável, como acontece com currículos digitalizados. Preencha os campos à mão."), campos);
+        Assert.Equivalent(new CamposExtraidos(null, null, null,
+            ["O PDF não tem texto selecionável, como acontece com currículos digitalizados. Preencha os campos à mão."]),
+            campos, strict: true);
     }
 
     [Fact]

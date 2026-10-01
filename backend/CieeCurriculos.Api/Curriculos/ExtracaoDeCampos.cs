@@ -42,11 +42,24 @@ public static class ExtracaoDeCampos
             .ToList();
         var email = Email.Match(texto);
         var telefone = Telefone.Match(NumeroDeDocumento.Replace(texto, " "));
-        return new CamposExtraidos(
+        var campos = new CamposExtraidos(
             NomeCompleto: NomeCompleto(linhas),
             Email: email.Success ? email.Value : null,
-            Telefone: telefone.Success ? Regex.Replace(telefone.Groups["numero"].Value, @"\D", "") : null);
+            Telefone: telefone.Success ? Regex.Replace(telefone.Groups["numero"].Value, @"\D", "") : null,
+            Avisos: []);
+        return campos with { Avisos = CamposNaoEncontrados(campos) };
     }
+
+    private static List<string> CamposNaoEncontrados(CamposExtraidos campos) =>
+        new (string? Valor, string Nome)[]
+        {
+            (campos.NomeCompleto, "Nome completo"),
+            (campos.Email, "E-mail"),
+            (campos.Telefone, "Telefone")
+        }
+        .Where(campo => campo.Valor is null)
+        .Select(campo => $"{campo.Nome} não encontrado no currículo.")
+        .ToList();
 
     private static string? NomeCompleto(List<string> linhas)
     {

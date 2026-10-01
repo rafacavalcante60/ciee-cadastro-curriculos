@@ -33,7 +33,8 @@ public class ExtracaoDeCurriculoTestes : IAsyncLifetime
 
         Assert.Equal(HttpStatusCode.OK, resposta.StatusCode);
         var campos = await resposta.Content.ReadFromJsonAsync<CamposExtraidos>();
-        Assert.Equal(new CamposExtraidos("Maria Aparecida da Silva", "maria.silva@exemplo.com", "11987654321"), campos);
+        Assert.Equivalent(new CamposExtraidos("Maria Aparecida da Silva", "maria.silva@exemplo.com", "11987654321", []),
+            campos, strict: true);
     }
 
     [Fact]
@@ -60,8 +61,8 @@ public class ExtracaoDeCurriculoTestes : IAsyncLifetime
 
         Assert.Equal(HttpStatusCode.OK, resposta.StatusCode);
         var campos = await resposta.Content.ReadFromJsonAsync<CamposExtraidos>();
-        Assert.Equal(CamposExtraidos.SemResultado(
-            "O PDF não tem texto selecionável, como acontece com currículos digitalizados. Preencha os campos à mão."), campos);
+        Assert.Equivalent(CamposExtraidos.SemResultado(
+            "O PDF não tem texto selecionável, como acontece com currículos digitalizados. Preencha os campos à mão."), campos, strict: true);
     }
 
     [Fact]
@@ -70,7 +71,7 @@ public class ExtracaoDeCurriculoTestes : IAsyncLifetime
         var extracao = await EnviarAsync("curriculo-corrompido.pdf", Amostra("curriculo-corrompido.pdf"));
         var campos = await extracao.Content.ReadFromJsonAsync<CamposExtraidos>();
         Assert.Equal(HttpStatusCode.OK, extracao.StatusCode);
-        Assert.NotNull(campos!.Aviso);
+        Assert.NotEmpty(campos!.Avisos);
 
         var cadastro = await _cliente.PostAsJsonAsync("/api/candidatos", new NovoCandidato
         {
@@ -136,7 +137,7 @@ public class ExtracaoDeCurriculoTestes : IAsyncLifetime
         var resposta = await EnviarAsync(arquivo, Amostra(arquivo));
 
         Assert.Equal(HttpStatusCode.OK, resposta.StatusCode);
-        Assert.Equal(esperado[arquivo], await resposta.Content.ReadFromJsonAsync<CamposExtraidos>());
+        Assert.Equivalent(esperado[arquivo], await resposta.Content.ReadFromJsonAsync<CamposExtraidos>(), strict: true);
     }
 
     private const string ArquivoQueNaoEPdf = "nao-e-pdf.pdf";
