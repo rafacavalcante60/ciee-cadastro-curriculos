@@ -245,7 +245,8 @@ Ticket: [#5](https://github.com/rafacavalcante60/ciee-cadastro-curriculos/issues
 Regras de nome, e-mail, telefone e tamanho dos campos na API e no formulário,
 com mensagens em português junto a cada campo. E-mail repetido devolve 409 e
 aparece no campo de e-mail. O cadastro bem-sucedido mostra um aviso, e a API
-fora do ar gera uma mensagem própria.
+fora do ar gera uma mensagem própria. **Tempo:** cerca de 20 minutos,
+incluindo revisão.
 
 **Onde a IA ajudou:** testes no seam HTTP, no formulário e no
 `CandidatoService` escritos antes do código, um ciclo por regra; conferência
