@@ -45,7 +45,7 @@ export class CadastroCandidatoComponent {
   readonly falha = signal<Exclude<FalhaAoCadastrar['tipo'], 'campos'> | null>(null);
   readonly extraindo = signal(false);
   readonly falhaNaExtracao = signal<string | null>(null);
-  readonly avisoDaExtracao = signal<string | null>(null);
+  readonly avisosDaExtracao = signal<string[]>([]);
 
   extrairCurriculo(seletor: HTMLInputElement): void {
     const arquivo = seletor.files?.[0];
@@ -56,7 +56,7 @@ export class CadastroCandidatoComponent {
     }
 
     this.falhaNaExtracao.set(null);
-    this.avisoDaExtracao.set(null);
+    this.avisosDaExtracao.set([]);
     if (arquivo.size > limiteDoCurriculoEmBytes) {
       this.falhaNaExtracao.set('O arquivo excede o limite de 5 MB.');
       return;
@@ -64,17 +64,17 @@ export class CadastroCandidatoComponent {
 
     this.extraindo.set(true);
     this.servico.extrairCurriculo(arquivo).subscribe({
-      next: campos => {
-        this.avisoDaExtracao.set(campos.aviso);
-        // Com aviso nada foi lido: apagar o formulário levaria o que já foi digitado.
-        if (campos.aviso) {
+      next: ({ avisos, ...identificados }) => {
+        this.avisosDaExtracao.set(avisos);
+        // Sem nada identificado, apagar o formulário levaria o que já foi digitado.
+        if (Object.values(identificados).every(valor => valor === null)) {
           return;
         }
         // Campo não identificado volta vazio, para não sobrar o valor de outro currículo.
         this.formulario.patchValue({
-          nomeCompleto: campos.nomeCompleto ?? '',
-          email: campos.email ?? '',
-          telefone: campos.telefone ?? ''
+          nomeCompleto: identificados.nomeCompleto ?? '',
+          email: identificados.email ?? '',
+          telefone: identificados.telefone ?? ''
         });
       },
       error: (falha: FalhaNaExtracao) => {

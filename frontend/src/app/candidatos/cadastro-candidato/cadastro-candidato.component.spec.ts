@@ -274,6 +274,8 @@ describe('CadastroCandidatoComponent', () => {
       fixture.detectChanges();
     }
 
+    const nadaLido = { nomeCompleto: null, email: null, telefone: null };
+
     function extrair(campos: CamposExtraidos): void {
       respostaDaExtracao.next(campos);
       respostaDaExtracao.complete();
@@ -297,14 +299,14 @@ describe('CadastroCandidatoComponent', () => {
       expect(botao.disabled).toBeTrue();
       expect(botao.textContent).toContain('Lendo currículo');
 
-      extrair({ nomeCompleto: null, email: null, telefone: null, aviso: null });
+      extrair({ ...nadaLido, avisos: [] });
 
       expect(botao.disabled).toBeFalse();
     });
 
     it('preenche os campos identificados, que continuam editáveis, e o cadastro conclui', () => {
       escolherArquivo(curriculo);
-      extrair({ nomeCompleto: 'Maria Aparecida da Silva', email: 'maria.silva@exemplo.com', telefone: '11987654321', aviso: null });
+      extrair({ nomeCompleto: 'Maria Aparecida da Silva', email: 'maria.silva@exemplo.com', telefone: '11987654321', avisos: [] });
 
       expect(valorDoCampo('nomeCompleto')).toBe('Maria Aparecida da Silva');
       expect(valorDoCampo('email')).toBe('maria.silva@exemplo.com');
@@ -327,16 +329,26 @@ describe('CadastroCandidatoComponent', () => {
       preencher('telefone', '(21) 3333-4444');
 
       escolherArquivo(curriculo);
-      extrair({ nomeCompleto: 'Maria Aparecida da Silva', email: 'maria.silva@exemplo.com', telefone: null, aviso: null });
+      extrair({ ...nadaLido, nomeCompleto: 'Maria Aparecida da Silva', avisos: ['Telefone não encontrado no currículo.'] });
 
       expect(valorDoCampo('telefone')).toBe('');
+    });
+
+    it('lista todos os avisos da extração', () => {
+      const avisos = ['E-mail não encontrado no currículo.', 'Telefone não encontrado no currículo.'];
+
+      escolherArquivo(curriculo);
+      extrair({ ...nadaLido, nomeCompleto: 'Maria Aparecida da Silva', avisos });
+
+      const itens = Array.from(tela.querySelectorAll('.extracao [role="status"] li')).map(item => item.textContent?.trim());
+      expect(itens).toEqual(avisos);
     });
 
     it('com aviso da extração, mostra o aviso como informação, sem alerta de erro, e o cadastro manual conclui', () => {
       const aviso = 'O PDF não tem texto selecionável, como acontece com currículos digitalizados. Preencha os campos à mão.';
 
       escolherArquivo(curriculo);
-      extrair({ nomeCompleto: null, email: null, telefone: null, aviso });
+      extrair({ ...nadaLido, avisos: [aviso] });
 
       expect(tela.querySelector('.extracao [role="status"]')?.textContent).toContain(aviso);
       expect(tela.querySelector('.extracao [role="alert"]')).toBeNull();
@@ -347,24 +359,24 @@ describe('CadastroCandidatoComponent', () => {
       expect(enviados.length).toBe(1);
     });
 
-    it('com aviso da extração, mantém o que já tinha sido digitado', () => {
+    it('quando nada foi identificado, mantém o que já tinha sido digitado', () => {
       preencher('nomeCompleto', 'Maria da Silva');
       preencher('email', 'maria.silva@exemplo.com');
 
       escolherArquivo(curriculo);
-      extrair({ nomeCompleto: null, email: null, telefone: null, aviso: 'O PDF é protegido por senha e não pôde ser lido. Preencha os campos à mão.' });
+      extrair({ ...nadaLido, avisos: ['O PDF é protegido por senha e não pôde ser lido. Preencha os campos à mão.'] });
 
       expect(valorDoCampo('nomeCompleto')).toBe('Maria da Silva');
       expect(valorDoCampo('email')).toBe('maria.silva@exemplo.com');
     });
 
-    it('apaga o aviso anterior ao ler outro currículo', () => {
+    it('apaga os avisos anteriores ao ler outro currículo', () => {
       escolherArquivo(curriculo);
-      extrair({ nomeCompleto: null, email: null, telefone: null, aviso: 'O PDF é protegido por senha e não pôde ser lido. Preencha os campos à mão.' });
+      extrair({ ...nadaLido, avisos: ['O PDF é protegido por senha e não pôde ser lido. Preencha os campos à mão.'] });
 
       respostaDaExtracao = new Subject<CamposExtraidos>();
       escolherArquivo(curriculo);
-      extrair({ nomeCompleto: 'Maria Aparecida da Silva', email: 'maria.silva@exemplo.com', telefone: null, aviso: null });
+      extrair({ nomeCompleto: 'Maria Aparecida da Silva', email: 'maria.silva@exemplo.com', telefone: '11987654321', avisos: [] });
 
       expect(tela.querySelector('.extracao [role="status"]')).toBeNull();
     });

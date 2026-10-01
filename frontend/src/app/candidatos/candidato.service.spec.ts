@@ -144,7 +144,7 @@ describe('CandidatoService', () => {
     const arquivo = new File(['%PDF-1.7'], 'curriculo.pdf', { type: 'application/pdf' });
 
     it('envia o arquivo em multipart para /api/curriculos/extracao e devolve os campos', () => {
-      const campos: CamposExtraidos = { nomeCompleto: 'Maria da Silva', email: null, telefone: '11987654321', aviso: null };
+      const campos: CamposExtraidos = { nomeCompleto: 'Maria da Silva', email: null, telefone: '11987654321', avisos: [] };
       let recebidos: CamposExtraidos | undefined;
 
       servico.extrairCurriculo(arquivo).subscribe(resposta => (recebidos = resposta));

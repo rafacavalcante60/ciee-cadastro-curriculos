@@ -27,7 +27,7 @@ export interface CamposExtraidos {
   nomeCompleto: string | null;
   email: string | null;
   telefone: string | null;
-  aviso: string | null;
+  avisos: string[];
 }
 
 export type FalhaNaExtracao =

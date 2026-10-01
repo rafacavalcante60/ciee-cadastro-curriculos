@@ -15,8 +15,12 @@
     <p class="falha" role="alert">{{ mensagem }}</p>
   }
   <!-- role="status" e não "alert": a leitura falhou, mas nada impede o cadastro. -->
-  @if (avisoDaExtracao(); as aviso) {
-    <p class="aviso" role="status">{{ aviso }}</p>
+  @if (avisosDaExtracao().length > 0) {
+    <ul class="aviso" role="status">
+      @for (aviso of avisosDaExtracao(); track aviso) {
+        <li>{{ aviso }}</li>
+      }
+    </ul>
   }
 </section>
 
