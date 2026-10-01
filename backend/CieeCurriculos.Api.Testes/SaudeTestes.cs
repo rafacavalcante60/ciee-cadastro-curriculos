@@ -59,6 +59,20 @@ public class SaudeTestes
 
     public class SemBancoDisponivel
     {
+        [Theory]
+        [InlineData("isso nao e uma connection string")]
+        [InlineData("Server=;Database=;")]
+        [InlineData("")]
+        public async Task Responde_503_quando_a_connection_string_esta_invalida(string conexao)
+        {
+            await using var aplicacao = new AplicacaoDeTestes(conexao);
+            var cliente = aplicacao.CreateClient();
+
+            var resposta = await cliente.GetAsync("/api/saude");
+
+            Assert.Equal(HttpStatusCode.ServiceUnavailable, resposta.StatusCode);
+        }
+
         [Fact]
         public async Task Responde_503_quando_o_servidor_de_banco_esta_inacessivel()
         {

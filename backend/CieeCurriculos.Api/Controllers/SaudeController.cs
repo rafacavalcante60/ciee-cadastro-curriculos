@@ -61,19 +61,27 @@ public class SaudeController : ControllerBase
     /// </summary>
     private async Task<bool> ServidorAcessivelAsync(CancellationToken cancelamento)
     {
-        var construtor = new SqlConnectionStringBuilder(_contexto.Database.GetConnectionString())
-        {
-            InitialCatalog = "master"
-        };
-
         try
         {
-            await using var conexao = new SqlConnection(construtor.ConnectionString);
+            var conexaoAdministrativa = new SqlConnectionStringBuilder(_contexto.Database.GetConnectionString())
+            {
+                InitialCatalog = "master"
+            };
+
+            await using var conexao = new SqlConnection(conexaoAdministrativa.ConnectionString);
             await conexao.OpenAsync(cancelamento);
             return true;
         }
         catch (SqlException)
         {
+            // Servidor fora do ar, credencial recusada, tempo de espera esgotado.
+            return false;
+        }
+        catch (ArgumentException)
+        {
+            // Connection string malformada: a montagem da conexão falha antes de
+            // qualquer tentativa de rede. É o erro de configuração que este
+            // endpoint existe para diagnosticar, então também responde 503.
             return false;
         }
     }
