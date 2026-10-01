@@ -174,6 +174,53 @@ com o Chrome do puppeteer, README.
   minúsculas, e hora exibida no fuso local.
 - `schema.sql` aplicado duas vezes seguidas no mesmo banco, sem erro.
 
+## Fatia 3: detalhes do candidato
+
+Ticket: [#4](https://github.com/rafacavalcante60/ciee-cadastro-curriculos/issues/4).
+
+`GET /api/candidatos/{id}` e a tela de detalhes, alcançada pelo nome do
+candidato na listagem. Candidato inexistente gera 404 em ProblemDetails na API
+e uma mensagem de "não encontrado" na tela.
+
+**Onde a IA ajudou:** testes no seam HTTP escritos antes do endpoint, tela de
+detalhes com seus testes, conferência do fluxo no navegador.
+
+**Decisões desta fatia:**
+
+- **404 pelo `[ApiController]`.** `NotFound()` já sai como ProblemDetails, com
+  `application/problem+json`. O controller não monta corpo de erro, e o teste
+  confere o tipo de conteúdo para que isso não regrida em silêncio.
+- **Identificador inválido tratado na tela.** A rota da API exige inteiro
+  (`{id:int}`), então `/candidatos/abc` receberia um 404 sem corpo. A tela
+  trata qualquer valor que não seja inteiro positivo como "não encontrado",
+  sem chamar a API.
+- **"Não encontrado" separado de falha.** Só o 404 mostra "Candidato não
+  encontrado". Servidor fora do ar mostra a mensagem genérica de falha, para
+  não dizer que o candidato não existe quando o problema é outro.
+- **Resumo por inteiro com as quebras de linha.** O teste usa um resumo de
+  cerca de 1.700 caracteres e confere que volta igual. Na tela,
+  `white-space: pre-wrap` mantém os parágrafos digitados.
+- **Link no nome, não na linha inteira.** Uma linha clicável não é alcançável
+  pelo teclado sem código extra; um link é.
+
+**O que corrigi ou adaptei:**
+
+- O primeiro teste de detalhes usava um resumo de 2.240 caracteres e falhou no
+  `POST`, porque a coluna tem 2.000. Reduzi o texto. O estouro virar 500 em vez
+  de 400 já está anotado para a #5.
+
+**Como verifiquei:**
+
+- Dois testes de integração novos contra SQL Server real: detalhes devolvem os
+  dados gravados, e id inexistente devolve 404 em ProblemDetails. Os dois
+  falharam antes do endpoint existir.
+- Cinco testes da tela (campos completos, campo ausente como "Não informado",
+  404, id inválido, falha genérica) e um do `CandidatoService`.
+- Mutação: tratei todo erro como falha genérica e removi a guarda do id. Dois
+  testes da tela falharam; código restaurado.
+- No navegador: clique no nome na listagem abre os detalhes; `/candidatos/999999`
+  e `/candidatos/abc` mostram "Candidato não encontrado".
+
 ## Limitações conhecidas
 
 <!-- Consolidado na fatia de documentação, após a importação de PDF estar pronta. -->
