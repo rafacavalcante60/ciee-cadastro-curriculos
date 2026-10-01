@@ -31,14 +31,12 @@ module.exports = function (config) {
     ],
     client: {
       jasmine: {
-        // you can add configuration options for Jasmine here
-        // the possible options are listed at https://jasmine.github.io/api/edge/Configuration.html
-        // for example, you can disable the random execution with `random: false`
-        // or set a specific seed with `seed: 4321`
+        // Opções do Jasmine, se necessário:
+        // https://jasmine.github.io/api/edge/Configuration.html
       },
     },
     jasmineHtmlReporter: {
-      suppressAll: true // removes the duplicated traces
+      suppressAll: true // remove os rastros duplicados
     },
     coverageReporter: {
       dir: require('path').join(__dirname, './coverage/ciee-curriculos'),

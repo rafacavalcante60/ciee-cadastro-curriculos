@@ -6,8 +6,9 @@ namespace CieeCurriculos.Api.Testes.Infraestrutura;
 
 /// <summary>
 /// Sobe a aplicação real em memória, apontada para o banco de testes.
-/// Este é o seam de teste do backend: as requisições atravessam o pipeline
-/// completo — roteamento, validação, controller, Entity Framework e banco.
+/// É o ponto de observação escolhido para os testes do backend: o mais alto
+/// disponível, em que as requisições atravessam o pipeline completo —
+/// roteamento, validação, controller, Entity Framework e banco.
 /// </summary>
 public sealed class AplicacaoDeTestes : WebApplicationFactory<Program>
 {
