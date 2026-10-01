@@ -5,8 +5,8 @@ de cada fatia, não reconstruído no final.
 
 ## Resumo
 
-Usei o Claude Code (Anthropic), modelo Claude Opus 5, como par de programação
-em todo o desafio. Primeiro o modelo me questionou sobre o desenho (27
+Usei o Claude Code (Anthropic), com os modelos Claude Opus 5 e Opus 5.5, como
+par de programação em todo o desafio. Primeiro o modelo me questionou sobre o desenho (27
 perguntas em quatro rodadas); depois escrevi a especificação e o recorte em
 tickets, e só então implementei, um ticket por vez. Não pedi o projeto pronto.
 
@@ -259,7 +259,7 @@ SQL Server para o caminho com SDKs e para os testes.
 ## Fatia 8: documentação e integração contínua
 
 [#8](https://github.com/rafacavalcante60/ciee-cadastro-curriculos/issues/8) ·
-tempo a registrar.
+cerca de 1 hora.
 
 README revisto inteiro, workflow de CI, este registro consolidado e a
 aplicação conferida num clone limpo pelos dois caminhos.
@@ -362,8 +362,8 @@ Os detalhes estão em cada fatia; aqui, juntos:
 
 ## Tempo dedicado
 
-Cerca de 6 horas e 10 minutos nas fatias 1 a 7, contando o questionamento
-inicial, a especificação e os tickets; o tempo da fatia 8 está na seção dela.
+Cerca de 7 horas e 10 minutos no total, contando o questionamento inicial, a
+especificação e os tickets.
 
 ## Limitações conhecidas
 
