@@ -184,7 +184,7 @@ samples/     Currículos fictícios, resultado esperado e o gerador
   mais o nome, mas exigiria uma chave de API que quem avalia não tem, e traria
   custo por currículo, latência, falha de rede e dados pessoais enviados a um
   serviço externo. A heurística é previsível e testável. Os casos em que ela
-  erra estão nas [limitações conhecidas](DESENVOLVIMENTO.md#limitações-conhecidas),
+  erra estão nas [limitações conhecidas](#limitações-conhecidas),
   e os campos sempre ficam editáveis antes de salvar.
 - **Um projeto de API e um de testes, organizados por pastas** (`Candidatos/`,
   `Curriculos/`, `Dados/`), sem Clean Architecture, MediatR ou CQRS. Para uma
@@ -222,3 +222,17 @@ pedido:
   onze dígitos.
 - **Outros idiomas**: a aplicação é só em português.
 - **Implantação em nuvem**: a aplicação roda localmente com um comando.
+
+## Limitações conhecidas
+
+| Limitação | Efeito para quem usa |
+|---|---|
+| PDF digitalizado, sem OCR | Nenhum campo é preenchido; aparece um aviso e os dados são digitados à mão. |
+| Sem rótulo `Nome:`, o nome é a primeira linha de palavras capitalizadas | Um cabeçalho como "Dados Pessoais" antes do nome vira o nome. Nome todo em minúsculas não é reconhecido: vale a próxima linha que pareça nome, como "Experiência Profissional", ou o campo fica vazio. |
+| Diagramação em colunas | O texto é lido na ordem gravada no arquivo; uma coluna lateral com "Inglês Avançado" antes do nome faz dele o nome. |
+| Telefone só nos formatos brasileiros, com DDD | Número de outro país fica vazio ou, como `+44 20 7946 0958`, vira `2079460958`. Número sem DDD fica vazio. |
+| Só nome, e-mail e telefone, como pede o enunciado | Área de interesse e resumo são sempre digitados, mesmo que o currículo tenha essas seções. |
+| Mais de um e-mail ou telefone | Vale o primeiro, que pode ser o de uma referência. |
+
+Em todos os casos os campos ficam editáveis, e o cadastro só é salvo depois que
+a pessoa do recrutamento confere.
