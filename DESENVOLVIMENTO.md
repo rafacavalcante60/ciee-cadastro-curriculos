@@ -66,7 +66,8 @@ histórico, que já estava publicado.
 ## Fatia 1: esqueleto e conexão com o banco
 
 [#2](https://github.com/rafacavalcante60/ciee-cadastro-curriculos/issues/2) ·
-cerca de 2 horas, incluindo questionamento, especificação e tickets.
+cerca de 1 hora e 20 minutos de trabalho, incluindo questionamento, especificação e
+tickets, numa janela de 3 horas com pausas.
 
 Monorepo com `frontend/` e `backend/`, SQL Server em container, testes nos dois
 lados e um endpoint de saúde. A IA gerou o esqueleto, a fixture de
@@ -259,7 +260,7 @@ SQL Server para o caminho com SDKs e para os testes.
 ## Fatia 8: documentação e integração contínua
 
 [#8](https://github.com/rafacavalcante60/ciee-cadastro-curriculos/issues/8) ·
-cerca de 1 hora.
+cerca de 30 minutos.
 
 README revisto inteiro, workflow de CI, este registro consolidado e a
 aplicação conferida num clone limpo pelos dois caminhos.
@@ -362,7 +363,7 @@ Os detalhes estão em cada fatia; aqui, juntos:
 
 ## Tempo dedicado
 
-Cerca de 7 horas e 10 minutos no total, contando o questionamento inicial, a
+Cerca de 6 horas no total, contando o questionamento inicial, a
 especificação e os tickets.
 
 ## Limitações conhecidas
