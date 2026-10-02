@@ -20,7 +20,7 @@
         <dd>{{ candidato.email }}</dd>
 
         <dt>Telefone</dt>
-        <dd>{{ candidato.telefone ?? 'Não informado' }}</dd>
+        <dd>{{ (candidato.telefone | telefone) ?? 'Não informado' }}</dd>
 
         <dt>Área ou cargo de interesse</dt>
         <dd>{{ candidato.areaOuCargoDeInteresse ?? 'Não informado' }}</dd>

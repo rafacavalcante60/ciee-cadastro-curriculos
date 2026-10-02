@@ -7,12 +7,13 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { Candidato } from '../candidato.model';
 import { CandidatoService } from '../candidato.service';
+import { TelefonePipe } from '../telefone.pipe';
 
 type Situacao = 'carregando' | 'carregado' | 'naoEncontrado' | 'falha';
 
 @Component({
   selector: 'app-detalhes-candidato',
-  imports: [DatePipe, RouterLink, MatButtonModule, MatProgressSpinnerModule],
+  imports: [DatePipe, RouterLink, TelefonePipe, MatButtonModule, MatProgressSpinnerModule],
   templateUrl: './detalhes-candidato.component.html',
   styleUrl: './detalhes-candidato.component.scss'
 })
