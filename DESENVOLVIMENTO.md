@@ -9,12 +9,17 @@ Cerca de 6 horas no total, contando o questionamento inicial, a especificação
 e os tickets.
 
 Usei o Claude Code (Anthropic), com os modelos Claude Opus 5 e Opus 5.5, como
-par de programação em todo o desafio, mas não pedi o projeto pronto. Primeiro
-pedi ao modelo que me questionasse sobre o desenho (27 perguntas em quatro
-rodadas). Das respostas saíram a especificação e os tickets, e só então
-implementei, um ticket por vez. A última fatia, por exemplo, foi pedida com
-`/implement issue #8`, um comando do Claude Code que lê o ticket, implementa
-com testes primeiro onde cabe, roda as revisões e faz os commits.
+par de programação em todo o desafio, mas não pedi o projeto pronto. O fluxo
+seguiu quatro skills do Claude Code:
+
+1. `grill-me`: o modelo me questionou sobre o desenho, 27 perguntas em quatro
+   rodadas.
+2. `to-spec`: das respostas saiu a especificação, na issue #1.
+3. `to-ticket`: a especificação virou os tickets, um por fatia.
+4. `implement`: com tudo salvo nas issues, limpei o contexto e apliquei a skill
+   em cada ticket, um por vez (por exemplo, `/implement issue #8`). Ela lê o
+   ticket, implementa com testes primeiro onde cabe, roda as revisões e faz os
+   commits. Todas as fatias abaixo passaram por ela.
 
 Cada fatia passa por duas revisões feitas por agentes separados, uma contra os
 padrões do projeto e outra contra o ticket, e depois por testes de integração
@@ -23,11 +28,6 @@ contra SQL Server real e conferência manual com a aplicação rodando.
 A configuração do assistente (o `CLAUDE.md` e as instruções em `docs/agents/`)
 ficou no `.gitignore` porque é ambiente meu, não do projeto. O uso de IA está
 descrito aqui.
-
-Ao longo do caminho pedi ao modelo que parasse de atualizar o README a cada
-fatia, porque ninguém o lê no meio do caminho; que encurtasse este registro,
-que chegou a 464 linhas depois de cinco fatias; que não adicionasse lint, que
-nenhum ticket pedia; e que apagasse o glossário.
 
 ## Onde discordei do modelo
 
