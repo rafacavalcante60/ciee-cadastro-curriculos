@@ -275,10 +275,7 @@ aplicação conferida num clone limpo pelos dois caminhos.
   Angular passou a formatar na exibição: `(11) 91234-5678`.
 - A revisão apontou que o README dizia que todas as amostras passam pelo
   `esperado.json` (o `nao-e-pdf.pdf` tem teste à parte) e que este registro
-  afirmava conferência à mão antes de ela acontecer; corrigi os dois. Rejeitei
-  tirar das melhorias o que já estava em "Fora de escopo", mas depois apaguei a
-  seção de melhorias ao enxugar este registro, e as limitações foram para o
-  README.
+  afirmava conferência à mão antes de ela acontecer; corrigi os dois.
 
 ## Como verifiquei
 
